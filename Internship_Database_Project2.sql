@@ -139,3 +139,25 @@ SET salary = salary * 1.10
 WHERE department_id = 101;
 
 SELECT * FROM teachers;
+
+CREATE TABLE staff (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    role VARCHAR(50)
+);
+
+INSERT INTO staff (id, name, role)
+VALUES 
+    (1, 'Alice Smith', 'Admin'),
+    (2, 'Bob Johnson', 'Librarian'),
+    (3, 'Dr. Sharma', 'Teacher'); -- Added a duplicate name to demonstrate UNION
+
+-- Using UNION (Removes duplicates)
+SELECT name FROM teachers
+UNION
+SELECT name FROM staff;
+
+-- Using UNION ALL (Includes duplicates)
+SELECT name FROM teachers
+UNION ALL
+SELECT name FROM staff;
