@@ -72,3 +72,84 @@ We are done with this tracking exercise.
 This command permanently deletes the table structure and all data inside it.
 */
 DROP TABLE temp_inventory;
+create Database manga;
+drop database manga;
+create Database college;
+use college;
+create table students(
+Rollno INT PRIMARY KEY,
+    Name VARCHAR(100),
+    Class INT
+    );
+insert into students(Rollno, Name, Class)
+values(1, "Rahul",1),
+	  (2,"Sumita",1),
+      (3,"Arnav",1),
+      (4,"Kavya",1),
+      (5,"Nina",1);
+select * from students;
+UPDATE students
+SET Name = 'Neena'
+WHERE Rollno = 5;
+UPDATE students
+SET Name = 'Mayank'
+WHERE Rollno = 6;
+insert into students(Rollno, Name, Class)
+values(6,'Mayank',1);
+select * from students;
+DESCRIBE students;
+CREATE DATABASE CollegeManagement;
+
+USE CollegeManagement;
+
+DROP TABLE IF EXISTS Teachers;
+DROP TABLE IF EXISTS Departments;
+
+
+CREATE TABLE Departments (
+    Dept_ID INT PRIMARY KEY,
+    Dept_Name VARCHAR(100)
+);
+
+
+CREATE TABLE Teachers (
+    Teacher_ID INT PRIMARY KEY,
+    Name VARCHAR(100),
+    Location VARCHAR(100),
+    Subject VARCHAR(100),
+    Dept_ID INT,
+    FOREIGN KEY (Dept_ID) REFERENCES Departments(Dept_ID)
+);
+
+INSERT INTO Departments VALUES (101, 'Computer Science');
+INSERT INTO Departments VALUES (102, 'Mathematics');
+
+INSERT INTO Teachers VALUES (1, 'Sanjay', 'Lucknow', 'Software Engineering', 101);
+INSERT INTO Teachers VALUES (2, 'Mohan', 'Lucknow', 'Data Structures', 101);
+INSERT INTO Teachers VALUES (3, 'Ajay', 'Delhi', 'Algebra', 102);
+
+ALTER TABLE Teachers
+ADD Salary INT;
+
+UPDATE Teachers
+SET Salary = 50000
+WHERE Teacher_ID < 10;
+
+UPDATE Teachers
+SET Salary = 50000
+WHERE Teacher_ID < 10;
+
+
+SELECT * FROM Departments;
+SELECT * FROM Teachers;
+SELECT name, salary FROM Teachers where Teacher_ID<3;
+SELECT name, salary FROM Teachers where Teacher_ID<=3;
+SELECT Dept_Name FROM Departments;
+
+SELECT Teachers.Name, Departments.Dept_Name
+FROM Teachers
+JOIN Departments ON Teachers.Dept_ID = Departments.Dept_ID;
+
+SELECT *
+FROM Teachers
+JOIN Departments ON Teachers.Dept_ID = Departments.Dept_ID;
