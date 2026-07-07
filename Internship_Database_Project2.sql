@@ -161,3 +161,50 @@ SELECT name FROM staff;
 SELECT name FROM teachers
 UNION ALL
 SELECT name FROM staff;
+
+DROP TABLE IF EXISTS student;
+DROP TABLE IF EXISTS course;
+
+-- Create the Course table first (it contains the primary key)
+CREATE TABLE course (
+    C_ID INT PRIMARY KEY,
+    C_Name VARCHAR(100)
+);
+
+-- Create the Student table (it contains the foreign key)
+CREATE TABLE student (
+    ID INT PRIMARY KEY,
+    name VARCHAR(100),
+    C_ID INT,
+    FOREIGN KEY (C_ID) REFERENCES course(C_ID)
+);
+
+-- Insert data into Course
+INSERT INTO course VALUES 
+(101, 'Machine Learning'),
+(102, 'Artificial Intelligence'),
+(103, 'Database Management'),
+(104, 'P.B'),
+(105, 'SQL');
+
+-- Insert data into Student
+INSERT INTO student VALUES 
+(1, 'Jai', 101),
+(2, 'Rahul', 102),
+(3, 'Dhanya', 101),
+(4, 'Karan',103),
+(5, 'Neha', 104);
+
+-- View all data in the student table
+SELECT * FROM student;
+
+-- View all data in the course table
+SELECT * FROM course;
+
+SELECT s.ID, s.name, c.C_Name
+FROM student s
+JOIN course c ON s.C_ID = c.C_ID;
+
+SELECT *
+FROM student s
+JOIN course c ON s.C_ID = c.C_ID;
