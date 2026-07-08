@@ -296,3 +296,210 @@ SELECT d.dept_name, AVG(e.salary) AS average_dept_salary
 FROM emp e
 JOIN department d ON e.dept_id = d.dept_id
 GROUP BY d.dept_name;
+
+-- Display all records from the Employee table
+SELECT * FROM emp;
+
+-- Display only employee names and salaries
+SELECT name, salary FROM emp;
+
+-- Display employee names along with their cities
+SELECT name, location FROM emp;
+
+-- Find employees whose salary is greater than 50000
+SELECT * FROM emp WHERE salary > 50000;
+
+-- Find employees whose age is greater than 25
+SELECT * FROM emp WHERE age > 25;
+
+-- Display all female employees
+SELECT * FROM emp WHERE gender = 'Female';
+
+-- Display all employees who belong to Delhi
+SELECT * FROM emp WHERE location = 'Delhi';
+
+-- Find employees whose salary is between 40000 and 70000
+SELECT * FROM emp WHERE salary BETWEEN 40000 AND 70000;
+
+-- Find employees whose names start with the letter 'A'
+SELECT * FROM emp WHERE name LIKE 'A%';
+
+-- Find employees whose names end with the letter 'a'
+SELECT * FROM emp WHERE name LIKE '%a';
+
+-- Display employees whose city is either Delhi or Mumbai
+SELECT * FROM emp WHERE location IN ('Delhi', 'Mumbai');
+
+-- Display employees whose salary is not equal to 50000
+SELECT * FROM emp WHERE salary != 50000;
+
+-- Display employees whose salary is not equal to 50000
+SELECT * FROM emp WHERE salary <> 50000;
+
+-- Sort employees based on salary in ascending order
+SELECT * FROM emp ORDER BY salary ASC;
+
+-- Sort employees based on salary in descending order
+SELECT * FROM emp ORDER BY salary DESC;
+
+-- Display the top 5 highest-paid employees
+SELECT * FROM emp ORDER BY salary DESC LIMIT 5;
+
+-- Find the total number of employees
+SELECT COUNT(*) AS total_employees FROM emp;
+
+-- Find the maximum salary among employees
+SELECT MAX(salary) AS max_salary FROM emp;
+
+-- Find the minimum salary among employees
+SELECT MIN(salary) AS min_salary FROM emp;
+
+-- Find the average salary of employees
+SELECT AVG(salary) AS average_salary FROM emp;
+
+-- Find the total salary paid by the company
+SELECT SUM(salary) AS total_salary_expenditure FROM emp;
+
+-- Find the total number of male employees
+SELECT COUNT(*) AS total_male_employees FROM emp WHERE gender = 'Male';
+
+-- Find the total number of female employees
+SELECT COUNT(*) AS total_female_employees FROM emp WHERE gender = 'Female';
+
+-- Find the average salary of each department
+SELECT d.dept_name, AVG(e.salary) AS avg_dept_salary
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+GROUP BY d.dept_name;
+
+-- Find the maximum salary in each department
+SELECT d.dept_name, MAX(e.salary) AS max_dept_salary
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+GROUP BY d.dept_name;
+
+-- Find the minimum salary in each department
+SELECT d.dept_name, MIN(e.salary) AS min_dept_salary
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+GROUP BY d.dept_name;
+
+-- Find the total salary paid department-wise
+SELECT d.dept_name, SUM(e.salary) AS total_dept_salary
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+GROUP BY d.dept_name;
+
+-- Find departments having more than 3 employees
+SELECT d.dept_name, COUNT(e.id) AS emp_count
+FROM department d
+JOIN emp e ON d.dept_id = e.dept_id
+GROUP BY d.dept_name
+HAVING COUNT(e.id) > 3;
+
+-- Find departments where average salary is greater than 50000
+SELECT d.dept_name, AVG(e.salary) AS avg_dept_salary
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+GROUP BY d.dept_name
+HAVING AVG(e.salary) > 50000;
+
+-- Find the number of employees in each city
+SELECT location, COUNT(*) AS emp_count
+FROM emp
+GROUP BY location;
+
+-- Find the average salary of employees in each city
+SELECT location, AVG(salary) AS avg_city_salary
+FROM emp
+GROUP BY location;
+
+-- Display employee names along with their department names
+SELECT e.name, d.dept_name
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id;
+
+-- Display employee names with department locations
+SELECT e.name, d.floor_of_dept
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id;
+
+-- Find all employees working in the IT department
+SELECT e.*
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+WHERE d.dept_name = 'IT';
+
+-- Display all employees along with their department details
+SELECT e.*, d.dept_name, d.floor_of_dept
+FROM emp e
+LEFT JOIN department d ON e.dept_id = d.dept_id;
+
+-- Display all departments along with employees (including departments with no employees)
+SELECT d.dept_name, e.name
+FROM department d
+LEFT JOIN emp e ON d.dept_id = e.dept_id;
+
+-- Find employees who do not belong to any department
+SELECT * FROM emp WHERE dept_id IS NULL;
+
+-- Display department-wise employee count using JOIN
+SELECT d.dept_name, COUNT(e.id) AS emp_count
+FROM department d
+LEFT JOIN emp e ON d.dept_id = e.dept_id
+GROUP BY d.dept_name;
+
+-- Find the highest salary employee in each department using JOIN
+SELECT d.dept_name, e.name, e.salary
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+WHERE (e.dept_id, e.salary) IN (SELECT dept_id, MAX(salary) FROM emp GROUP BY dept_id);
+
+-- Display employee name, salary, department name, and location
+SELECT e.name, e.salary, d.dept_name, e.location
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id;
+
+-- Find employees working in departments located in Delhi
+SELECT e.name
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+WHERE e.location = 'Delhi';
+
+-- Find the total salary paid in each department using JOIN
+SELECT d.dept_name, SUM(e.salary) AS total_salary
+FROM department d
+JOIN emp e ON d.dept_id = e.dept_id
+GROUP BY d.dept_name;
+
+-- Find departments having more than 5 employees using JOIN
+SELECT d.dept_name, COUNT(e.id) AS emp_count
+FROM department d
+JOIN emp e ON d.dept_id = e.dept_id
+GROUP BY d.dept_name
+HAVING COUNT(e.id) > 5;
+
+-- Find the department having the highest average salary
+SELECT d.dept_name, AVG(e.salary) AS avg_sal
+FROM emp e
+JOIN department d ON e.dept_id = d.dept_id
+GROUP BY d.dept_name
+ORDER BY avg_sal DESC
+LIMIT 1;
+
+-- Find the department with the maximum number of employees
+SELECT d.dept_name, COUNT(e.id) AS emp_count
+FROM department d
+JOIN emp e ON d.dept_id = e.dept_id
+GROUP BY d.dept_name
+ORDER BY emp_count DESC
+LIMIT 1;
+
+-- Find employees whose age is greater than the average age of all employees
+SELECT * FROM emp
+WHERE age > (SELECT AVG(age) FROM emp);
+
+-- Find employees whose salary is above their department's average salary
+SELECT e.name, e.salary, e.dept_id
+FROM emp e
+WHERE e.salary > (SELECT AVG(salary) FROM emp WHERE dept_id = e.dept_id);
