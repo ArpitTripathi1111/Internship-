@@ -1,0 +1,2805 @@
+import os
+import subprocess
+import requests
+import sys
+import random
+import datetime
+import time
+import smtplib
+import requests
+import cv2
+import psutil
+import pyautogui as pg
+import pyttsx3
+import speech_recognition as sr
+import wikipedia
+import pywhatkit as kit
+import webbrowser
+import wolframalpha
+import pyjokes
+import winsound
+import psutil
+import ollama
+import PyPDF2
+import tkinter as tk
+import speedtest
+import screen_brightness_control as sbc
+import geocoder
+import tkinter as tk
+from PIL import Image, ImageTk
+from geopy.geocoders import Nominatim
+from tkinter import filedialog
+import requests
+import threading
+from bs4 import BeautifulSoup
+from pygame import mixer
+from requests import get
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+import cv2
+import mediapipe as mp
+import math
+import numpy as np
+from ctypes import cast, POINTER
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+import tkinter as tk
+from PIL import Image, ImageTk, ImageSequence
+import threading
+#import mediapipe.python.solutions as mp
+
+
+# Go to https://developer.wolframalpha.com/ to get your FREE App ID
+# It looks like: 'XL48G-85P...'
+client = wolframalpha.Client('PASTE_YOUR_APP_ID_HERE')
+
+
+# --- CONFIGURATION ---
+YOUR_EMAIL = 'your_gmail.com'
+EMAIL_PASSWORD = 'PUT_YOUR_GOOGLE_APP_PASSWORD_HERE'
+
+
+# --- FUNCTIONS ---
+
+
+def ensure_ollama_is_running():
+    try:
+        # Check if the server is already listening
+        requests.get("http://localhost:11434", timeout=2)
+        print(">> Ollama server detected.")
+    except requests.exceptions.ConnectionError:
+        print(">> Ollama offline. Launching background engine...")
+        # Start the server minimized/hidden so it doesn't clutter your screen
+        subprocess.Popen(["ollama", "serve"], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(3) # Give it a few seconds to warm up
+
+def speak(audio):
+    # CORRECTION: Re-initialize engine INSIDE function to fix the "Stop Speaking" bug
+    engine = pyttsx3.init('sapi5')
+    voices = engine.getProperty('voices')
+
+    # Try to set voice 2 (Zira), fallback to 0 if not found
+    try:
+        engine.setProperty('voice', voices[0].id)
+    except IndexError:
+        engine.setProperty('voice', voices[0].id)
+    engine.setProperty('volume', 0.5)
+    engine.setProperty('rate', 170)
+
+    print(f"Jarvis: {audio}")
+    engine.say(audio)
+    engine.runAndWait()
+
+
+def takecommand():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        r.pause_threshold = 1
+        try:
+            audio = r.listen(source, timeout=5, phrase_time_limit=5)
+        except sr.WaitTimeoutError:
+            return "none"
+
+    try:
+        print("Recognizing...")
+        query = r.recognize_google(audio, language='en-in')
+        print(f"User said: {query}\n")
+    except Exception as e:
+        return "none"
+    return query.lower()
+
+
+def take_text_command():
+    try:
+        print("\n" + "=" * 40)
+        query = input("⌨️ [Text Mode] Enter command: ").strip()
+        print("=" * 40 + "\n")
+
+        # If you accidentally press Enter without typing
+        if not query:
+            return "none"
+
+        return query.lower()
+
+    except KeyboardInterrupt:
+        # Prevents the script from crashing if you press Ctrl+C
+        print("\nInput cancelled.")
+        return "none"
+
+def wish():
+    hour = int(datetime.datetime.now().hour)
+    tt = time.strftime("%I:%M %p")
+    speak("I am On!!")
+    greeting = ""
+
+    if hour >= 0 and hour < 12:
+        greeting = "Good Morning Arpit"
+    elif hour >= 12 and hour < 18:
+        greeting = "Good Afternoon Arpit"
+    else:
+        greeting = "Good Evening Arpit"
+
+    speak(f"{greeting}, its {tt}. Please tell me how may I help you")
+
+
+def news():
+    main_url = 'http://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=5109c08d1f7a4f85a945fb7778a6309d'
+    try:
+        main_page = requests.get(main_url).json()
+        articles = main_page['articles']
+        head = []
+        day = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth']
+        for ar in articles:
+            head.append(ar['title'])
+        for i in range(len(day)):
+            # Added check to prevent crash if fewer than 10 articles
+            if i < len(head):
+                speak(f"today's {day[i]} news is: {head[i]}")
+    except Exception:
+        speak("Sorry Boss, I am unable to fetch the news right now.")
+
+
+
+
+
+def play_introduction_video():
+    # 1. Initialize Audio Mixer
+    mixer.init()
+
+    # Paths
+    video_list = [
+        r"C:\Users\dharm\OneDrive\APPLICATION\Adobe\jarvis.webm"
+    ]
+    sound_path = r"C:\Users\dharm\OneDrive\APPLICATION\Music\jarvis.mp3"
+
+    # 2. Setup Video
+    selected_video = random.choice(video_list)
+    cap = cv2.VideoCapture(selected_video)
+
+    if not cap.isOpened():
+        print(f"Error: Could not open {selected_video}.")
+        return
+
+    # 3. Setup Window
+    cv2.namedWindow("Jarvis System", cv2.WND_PROP_FULLSCREEN)
+    cv2.setWindowProperty("Jarvis System", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    # 4. START AUDIO (Before the loop starts)
+    try:
+        mixer.music.load(sound_path)
+        print("Playing startup sound...")
+        mixer.music.play()
+    except Exception as e:
+        print(f"Error playing sound: {e}")
+
+    # 5. START VIDEO LOOP
+    while True:
+        ret, frame = cap.read()
+
+        if not ret:
+            break
+
+        cv2.imshow("Jarvis System", frame)
+
+        # Press 'q' to skip
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            break
+
+    # Cleanup
+    cap.release()
+    cv2.destroyAllWindows()
+    # Optional: Stop music when video ends (if music is longer than video)
+    # mixer.music.stop()
+
+
+
+
+def check_battery(manual_check=False):
+    # Get battery details
+    battery = psutil.sensors_battery()
+
+    # If it's a desktop, battery might be None
+    if not battery:
+        if manual_check: speak("I cannot detect a battery. Are you on a desktop?")
+        return
+
+    percent = battery.percent
+    plugged = battery.power_plugged
+
+    # --- SCENARIO 1: MANUAL CHECK (You asked for it) ---
+    if manual_check:
+        speak(f"System is at {percent} percent power.")
+        if plugged:
+            speak("Charger is connected.")
+        else:
+            speak("Running on battery power.")
+        return  # Exit function
+
+    # --- SCENARIO 2: AUTOMATIC ALERT (Startup Check) ---
+    if not plugged and percent < 30:
+        speak(f"Alert. Battery is low at {percent} percent.")
+        speak("Please connect the charger to prevent system shutdown.")
+
+    elif plugged and percent > 95:
+        speak(f"Battery is fully charged at {percent} percent.")
+        speak("You can remove the charger to protect battery health.")
+
+def wait_for_wake_word():
+    # Define a specific recognizer for the wake word
+    r = sr.Recognizer()
+
+    with sr.Microphone() as source:
+        # Adjust for background noise so it doesn't trigger falsely
+        r.adjust_for_ambient_noise(source, duration=0.5)
+        r.pause_threshold = 1
+
+        while True:
+            try:
+                # Listen for short phrases (3 seconds limit) to save processing
+                audio = r.listen(source, timeout=5, phrase_time_limit=3)
+                query = r.recognize_google(audio, language='en-in').lower()
+
+                # --- CHECK FOR TRIGGER WORDS ---
+                if "arpit this side" in query or "eleven" in query or "jarvis" in query:
+                    speak("Access code accepted. Systems coming online.")
+                    return  # This breaks the loop and allows the main program to run
+
+            except Exception:
+                # If it hears noise or silence, just ignore and keep listening
+                pass
+
+
+
+
+def self_destruct_sequence():
+    # 1. Dramatic Warning
+    speak("Protocol Omega initiated.")
+    speak("Warning. Self destruct sequence activated.")
+    speak("All systems will be destroyed in T-minus 10 seconds.")
+
+    # 2. The Countdown Loop
+    for i in range(10, 0, -1):
+        # Determine beep frequency (higher pitch as time runs out)
+        frequency = 500 + (10 - i) * 100
+
+        # Speak the number
+        print(f"Self Destruct in: {i}")
+        speak(str(i))
+
+        # Play a siren beep (Frequency, Duration in ms)
+        winsound.Beep(frequency, 500)
+
+        # 3. The Finale
+    speak("Goodbye, Sir. It has been an honor.")
+
+    # --- CHOOSE YOUR ENDING (Uncomment ONE) ---
+
+    # OPTION A: Just close the script (Safe Mode / Prank)
+    sys.exit()
+
+    # OPTION B: Actually shutdown the computer (Real Mode)
+    # os.system("shutdown /s /t 0")
+
+
+
+
+
+def pdf_reader():
+    speak("Opening the file selector. Please choose the book.")
+
+    # 1. Open the Hidden Window
+    root = tk.Tk()
+    root.withdraw()  # Hide the main box
+    root.attributes('-topmost', True)  # Force the popup to appear on top
+
+    # 2. Ask for the file
+    file_path = filedialog.askopenfilename(
+        title="Select PDF to Read",
+        filetypes=[("PDF Files", "*.pdf")]
+    )
+
+    # 3. CRITICAL FIX: Destroy the window immediately so it doesn't freeze Jarvis
+    root.destroy()
+
+    # Check if a file was actually picked
+    if not file_path:
+        speak("No file selected.")
+        return
+
+    speak("Analyzing book, please wait...")
+    print(f"Selected: {file_path}")
+
+    try:
+        book = open(file_path, 'rb')
+        reader = PyPDF2.PdfReader(book)
+        total_pages = len(reader.pages)
+
+        speak(f"This book has {total_pages} pages.")
+        print(f"Total Pages: {total_pages}")
+
+        speak("Enter the page number in the terminal.")
+        # User must type in the terminal now
+        pg_number = int(input("Enter Page Number (0 is the first page): "))
+
+        if 0 <= pg_number < total_pages:
+            page = reader.pages[pg_number]
+            text = page.extract_text()
+
+            if text and text.strip() != "":
+                speak(f"Reading page {pg_number}")
+                print(text)  # Print text so you can read along
+                speak(text)
+            else:
+                speak("I can't read this page. It might be an image or scanned photo.")
+        else:
+            speak("That page number doesn't exist.")
+
+    except Exception as e:
+        print(f"Error: {e}")
+        speak("Sorry Boss, I could not read that file.")
+
+def system_status():
+    # Battery Check
+    battery = psutil.sensors_battery()
+    percentage = battery.percent
+
+    # CPU Check
+    cpu_usage = psutil.cpu_percent(interval=1)
+
+    speak(f"System power is at {percentage} percent.")
+    speak(f"CPU usage is currently {cpu_usage} percent.")
+
+    if percentage < 20 and not battery.power_plugged:
+        speak("Warning. Power levels critical. Please connect the charger.")
+
+
+def takeHealthCommand():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Health Monitor Listening...")
+
+        # 1. Wait longer before giving up (Wait 5 seconds for you to start speaking)
+        # 2. Allow 2 seconds of silence while speaking (so it doesn't cut you off)
+        r.pause_threshold = 2
+        r.energy_threshold = 300  # Adjusts for background noise
+
+        try:
+            # timeout=5 means it waits 5 seconds for you to START speaking
+            # phrase_time_limit=15 means you can speak for up to 15 seconds
+            audio = r.listen(source, timeout=5, phrase_time_limit=15)
+            print("Recognizing...")
+            query = r.recognize_google(audio, language='en-in')
+            print(f"User said: {query}")
+            return query
+
+        except Exception as e:
+            # Don't speak "Say that again" here, just return None silently
+            return "None"
+
+
+def health_mode():
+    speak("Health Command Center activated.")
+    speak("Options available: BMI, Heart Rate, Blood Pressure, Water Intake, Breath Test, or Exercise.")
+
+    no_response_count = 0
+
+
+
+    while True:
+        speak("Awaiting health command.")
+        health_query = takeHealthCommand().lower()
+
+        # --- CHECK IF USER IS SILENT ---
+        if health_query == "none":
+            no_response_count += 1
+            #print(f"No response: {no_response_count}/3")  # For debugging
+
+            if no_response_count >= 3:
+                speak("No activity detected. Exiting Health Mode to save power.")
+                break  # Stops the function
+
+            continue  # Skips the rest and listens again
+
+        else:
+            # If user speaks, RESET the counter to 0
+            no_response_count = 0
+
+        # --- 1. BMI CALCULATOR ---
+        if "bmi" in health_query:
+            speak("Let's check your body composition.")
+            speak("Opening BMI Calculator.")
+            try:
+                weight = float(input("Enter Weight (kg): "))
+
+                # Input height in Feet and Inches (e.g., 5 feet, 10 inches)
+                feet = int(input("Enter Height (Feet): "))
+                inches = int(input("Enter Height (Inches): "))
+
+                # CONVERSION LOGIC:
+                # 1 Foot = 0.3048 meters
+                # 1 Inch = 0.0254 meters
+                height_in_meters = (feet * 0.3048) + (inches * 0.0254)
+
+                # Standard Formula: BMI = kg / m^2
+                bmi = weight / (height_in_meters ** 2)
+
+                speak(f"Your height is {round(height_in_meters, 2)} meters.")
+                speak(f"Your BMI is {round(bmi, 2)}")
+
+                if bmi < 18.5:
+                    speak("You are underweight. Focus on a calorie surplus.")
+                elif 18.5 <= bmi < 25:
+                    speak("You are in the healthy range. Keep it up.")
+                elif 25 <= bmi < 30:
+                    speak("You are overweight. Cardio is recommended.")
+                else:
+                    speak("You are in the obese category. Please consult a nutritionist.")
+
+            except Exception as e:
+                speak("Invalid input. Please enter numbers only.")
+
+        # --- 2. HEART RATE (Pulse Timer) ---
+        elif "heart rate" in health_query or "pulse" in health_query:
+            speak("Place finger on pulse. Counting starts in 3... 2... 1... Go.")
+            time.sleep(15)
+            speak("Stop. Please enter the count.")
+            try:
+                beats = int(input("Enter Beats: "))
+                bpm = beats * 4
+                speak(f"Your heart rate is {bpm} BPM.")
+            except:
+                speak("Invalid number.")
+
+        # --- 3. BLOOD PRESSURE ANALYZER ---
+        elif "blood pressure" in health_query or "bp" in health_query:
+            speak("Please enter systolic and diastolic values in the terminal.")
+            try:
+                sys = int(input("Systolic (Upper): "))
+                dia = int(input("Diastolic (Lower): "))
+
+                speak(f"Analyzing {sys} over {dia}...")
+
+                if sys < 120 and dia < 80:
+                    speak("Your Blood Pressure is optimal.")
+                elif 120 <= sys <= 129 and dia < 80:
+                    speak("Your Blood Pressure is slightly elevated.")
+                elif sys >= 130 or dia >= 80:
+                    speak("Warning. You are in the hypertension range. Please consult a doctor.")
+            except:
+                speak("Invalid input.")
+
+        # --- 4. WATER INTAKE CALCULATOR ---
+        elif "water" in health_query or "hydration" in health_query:
+            speak("Calculating optimal hydration levels.")
+            try:
+                w = float(input("Enter your weight in kg: "))
+                # Scientific formula: roughly 35ml per kg of body weight
+                liters = (w * 0.033)
+                glasses = int((liters * 1000) / 250)
+
+                speak(f"Based on your weight, you should drink {round(liters, 1)} liters of water daily.")
+                speak(f"That is approximately {glasses} glasses.")
+            except:
+                speak("I need a valid weight.")
+
+        # --- 5. LUNG CAPACITY (Breath Hold Test) ---
+        elif "breath" in health_query or "lung" in health_query:
+            speak("Let's test your lungs. Take a deep breath.")
+            time.sleep(2)
+            speak("Hold it... Now!")
+
+            start_time = time.time()
+            input("Press Enter immediately when you exhale...")  # User waits and hits Enter
+            end_time = time.time()
+
+            duration = round(end_time - start_time, 2)
+            speak(f"You held your breath for {duration} seconds.")
+
+            if duration < 30:
+                speak("That is below average. Cardiovascular exercise is recommended.")
+            elif 30 <= duration <= 60:
+                speak("That is a healthy average duration.")
+            else:
+                speak("Excellent lung capacity, Boss.")
+
+        # --- 6. EYE STRAIN CHECK (20-20-20 Rule) ---
+        elif "eyes" in health_query or "vision" in health_query:
+            speak("As a coder, you must follow the 20-20-20 rule.")
+            speak("Every 20 minutes, look at something 20 feet away for 20 seconds.")
+            speak("I can set a reminder for you if you wish.")
+
+        # --- EXIT ---
+        elif "exit" in health_query or "close" in health_query:
+            speak("Closing Health Command Center.")
+            break
+
+        else:
+            speak("Command not recognized. Try BMI, BP, Water, or Breath test.")
+
+def my_location():
+    speak("Activating global positioning systems...")
+    try:
+        # 1. Get Coordinates from IP
+        g = geocoder.ip('me')
+        lat = g.latlng[0]
+        lng = g.latlng[1]
+
+        print(f"Coordinates: {lat}, {lng}")
+
+        # 2. Get Detailed Address using Geopy
+        # user_agent is required by the API, you can name it anything
+        geolocator = Nominatim(user_agent="jarvis_ai_arpit")
+        location = geolocator.reverse(f"{lat}, {lng}")
+
+        # 3. Speak the details
+        speak(f"We are currently in {g.city}, {g.state}.")
+        speak(f"The detailed address is: {location.address}")
+
+        # 4. Open Google Maps for visual confirmation
+        speak("Displaying location on map now.")
+        webbrowser.open(f"https://www.google.com/maps/search/?api=1&query={lat},{lng}")
+
+    except Exception as e:
+        speak("Sorry Boss, I am unable to track the detailed location right now.")
+        print(f"Error: {e}")
+
+
+
+
+
+def about_master():
+    # --- LISTS OF RANDOM REPLIES ---
+
+    # 1. The Introduction
+    intros = [
+        "I one of favourite Arpit Tripathi's creation.",
+        "My architect is the talented Mr. Arpit Tripathi.",
+        "I am the digital assistant of Arpit.",
+        "The one who wrote my lines of code is Arpit Tripathi."
+    ]
+
+    # 2. The Facts (Weight removed, as requested)
+    facts = [
+        "He is a 20-year-old Computer Science Engineer from SRMCEM Lucknow.",
+        "He is a dedicated programmer currently studying in the 3rd semester.",
+        "He stands tall at 5 feet 11 inches and is a pure vegetarian.",
+        "He is an engineering student with a passion for building AI systems."
+    ]
+
+    # 3. The Skills
+    skills = [
+        "He is an expert in Python, Django, and C plus plus.",
+        "He spends his days coding in Python and debugging complex algorithms.",
+        "His technical stack includes Python, Web Development, and AI logic.",
+        "He is a disciplined coder who loves solving problems."
+    ]
+
+    # 4. The Compliment (The "Iron Man" touch)
+    compliments = [
+        "He is working hard to revolutionize the world with technology.",
+        "I am proud to be his assistant.",
+        "He will not be able to find any chatbot better than me, just as he said.",
+        "He is a future tech leader in the making."
+    ]
+
+    # --- SPEAKING THE RANDOM COMBINATION ---
+
+    speak(random.choice(intros))
+    time.sleep(0.5)  # Natural pause
+    speak(random.choice(facts))
+    speak(random.choice(skills))
+    time.sleep(0.5)
+    speak(random.choice(compliments))
+
+    speak("Else information is confidential. by the way i am taking your Picture, you activities, phone number and IP address for future inspection as you want to know about my master. Now stop analyzing me")
+
+
+
+
+
+
+
+def control_brightness(command):
+    # Get current brightness (returns a list, we take the first screen)
+    current_level = sbc.get_brightness()[0]
+
+    # 1. INCREASE BRIGHTNESS
+    if "increase" in command or "up" in command:
+        new_level = min(current_level + 10, 100)  # Cap at 100%
+        sbc.set_brightness(new_level)
+        speak(f"Brightness increased to {new_level} percent.")
+
+    # 2. DECREASE BRIGHTNESS
+    elif "decrease" in command or "down" in command:
+        new_level = max(current_level - 10, 0)  # Floor at 0%
+        sbc.set_brightness(new_level)
+        speak(f"Brightness decreased to {new_level} percent.")
+
+    # 3. SET TO SPECIFIC NUMBER (e.g., "Set brightness to 50")
+    elif "set" in command or "to" in command:
+        # Extract the number from the sentence
+        import re
+        numbers = re.findall(r'\d+', command)
+
+        if numbers:
+            level = int(numbers[0])
+            # Safety check: Ensure it is between 0 and 100
+            if 0 <= level <= 100:
+                sbc.set_brightness(level)
+                speak(f"Setting brightness to {level} percent.")
+            else:
+                speak("Please specify a level between 0 and 100.")
+        else:
+            speak("I didn't hear a specific number.")
+
+    # 4. MAX/MIN SHORTCUTS
+    elif "max" in command or "full" in command:
+        sbc.set_brightness(100)
+        speak("Brightness set to maximum.")
+
+    elif "min" in command or "low" in command:
+        sbc.set_brightness(10)  # Don't go to 0, it might be too dark
+        speak("Brightness set to minimum.")
+
+def check_sleep_cycle():
+    # 1. Get the time details
+    now = datetime.datetime.now()
+    hour_24 = now.hour  # 0-23 format
+
+    # --- CONVERT TO INDIAN 12-HOUR FORMAT ---
+    if hour_24 == 0:
+        hour_12 = 12
+        period = "AM"
+    elif hour_24 < 12:
+        hour_12 = hour_24
+        period = "AM"
+    elif hour_24 == 12:
+        hour_12 = 12
+        period = "PM"
+    else:
+        hour_12 = hour_24 - 12
+        period = "PM"
+
+    # 2. Check Late Night (11 PM to 5 AM)
+    # logic: If hour is 23 (11 PM) or greater, OR hour is less than 5 (5 AM)
+    if hour_24 >= 23 or hour_24 < 5:
+
+        # Randomized Greetings using the new 12-Hour Time
+        greetings = [
+            f"Arpit, check the clock. It is {hour_12} {period}.",
+            f"Boss, do you realize it is {hour_12} at night?",
+            f"System clock indicates it is {hour_12} {period}. Time to sleep.",
+            "Attention. The world is sleeping, why are you awake?"
+        ]
+
+        advice = [
+            "You have a human body, not a GPU. You need rest.",
+            "A tired programmer creates more bugs than he fixes.",
+            "Your brain needs to compile the day's data. Sleep is mandatory.",
+            "Health comes first, coding comes second. Go to bed."
+        ]
+
+        speak(random.choice(greetings))
+        speak(random.choice(advice))
+        speak("Master you have a very broken sleep cycle")
+        speak("Do you have urgent work?")
+
+        # --- THE FIX IS HERE ---
+        # We use 'takecommand()' (lowercase c) to match your definition
+        ans = takecommand().lower()
+
+        if "work" in ans or "urgent" in ans or "yes" in ans or "project" in ans or 'boss' in ans or 'master' in ans or 'creator' in ans:
+            permissions = [
+                "Fine, but make it quick. I don't want you burning out.",
+                "Okay, I will stay awake with you. But drink some water first.",
+                "Understood. Enabling Night Mode for eye protection.",
+                "I will allow it this time. But don't make it a habit."
+            ]
+            speak(random.choice(permissions))
+            return
+
+
+
+def volume_control(command):
+    if "up" in command or "increase" in command:
+        speak("Increasing volume")
+        # Press the button 5 times to make a noticeable change
+        for _ in range(5):
+            pg.press("volumeup")
+
+    elif "down" in command or "decrease" in command:
+        speak("Decreasing volume")
+        # Press the button 5 times
+        for _ in range(5):
+            pg.press("volumedown")
+
+    elif "mute" in command or "silent" in command:
+        speak("Muting system")
+        pg.press("volumemute")
+
+    elif "unmute" in command:
+        speak("Unmuting")
+        pg.press("volumemute")  # Pressing mute again unmutes it
+
+
+def chat_with_jarvis(user_text):
+    """
+    Sends text to the local LLM (Phi-3) and returns the response.
+    This is for general conversation (e.g., 'Who is Elon Musk?', 'Tell me a joke').
+    """
+    try:
+        # 'stream=False' ensures we get the whole text at once
+        response = ollama.chat(model='phi3', messages=[
+            {
+                'role': 'system',
+                'content': "You are Jarvis, a helpful AI assistant created by Arpit. Keep answers short and concise."
+            },
+            {
+                'role': 'user',
+                'content': user_text
+            },
+        ])
+
+        # Accessing the response safely using dictionary syntax
+        return response['message']['content']
+
+    except Exception as e:
+        return "My brain is offline. Please check if Ollama is running."
+
+
+def standby_mode():
+    speak("Going into standby mode.")
+    # Say 'Wake Up' to bring me back online.
+    #speak("Say 'Wake Up' to bring me back online.")
+    print("--- STANDBY MODE ---")
+
+    while True:
+        # We use a basic recognizer here to save resources
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            try:
+                # Wait for sound
+                audio = r.listen(source, timeout=10, phrase_time_limit=5)
+                wake_command = r.recognize_google(audio, language='en-in').lower()
+
+                if "wake up" in wake_command or "jarvis" in wake_command or "online" in wake_command:
+                    speak("Systems back online. How can I help you, Boss?")
+                    break  # Breaks the standby loop -> returns to Main Loop
+
+            except Exception:
+                # If silence, just keep waiting silently
+                pass
+
+
+def tell_time_detailed():
+    # Get all time data
+    now = datetime.datetime.now()
+
+    # 1. Determine Greeting based on 24-hour clock
+    hour = now.hour
+    if 5 <= hour < 12:
+        greeting = "Good Morning"
+    elif 12 <= hour < 17:
+        greeting = "Good Afternoon"
+    elif 17 <= hour < 22:
+        greeting = "Good Evening"
+    else:
+        greeting = "Hello Night Owl"  # For late nights
+
+    # 2. Format Time (12-hour) and Date
+    time_now = now.strftime("%I:%M %p")  # e.g., 09:30 AM
+    full_date = now.strftime("%A, %d %B %Y")  # e.g., Monday, 25 October 2025
+
+    # 3. Advanced Stats (Week Number & Day of Year)
+    # %U = Week number of the year (00-53)
+    # %j = Day of the year (001-366)
+    week_num = now.strftime("%U")
+    day_num = now.strftime("%j")
+
+    # 4. Speak the Report
+    speak(f"{greeting}, Arpit.")
+    speak(f"The current time is {time_now}.")
+    speak(f"It is {full_date}.")
+    speak(f"We are currently in week {week_num} of the year, day number {day_num}.")
+
+
+
+def startup_interface():
+    # 1. Clear the console (Optional, works on Windows)
+    import os
+    os.system('cls')
+
+    # 2. ASCII LOGO (The Cool Part)
+    logo = """
+    ██  █████╗ ██████╗ ██╗   ██╗██╗███████╗
+    ██║ ██╔══██╗██╔══██╗██║   ██║██║██╔════╝
+    ██║ ███████║██████╔╝██║   ██║██║███████╗
+    ██║ ██╔══██║██╔══██╗╚██╗ ██╔╝██║╚════██║
+    ██║ ██║  ██║██║  ██║ ╚████╔╝ ██║███████║
+    ╚═╝ ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚═╝╚══════╝
+       ADVANCED VIRTUAL ASSISTANT - v2.0
+       CREATED BY ARPIT TRIPATHI
+    """
+    print(logo)
+
+    # 3. Simulated Boot Sequence
+    print("--------------------------------------------------")
+    print(">> ESTABLISHING SECURE CONNECTION...")
+    time.sleep(0.5)
+    print(">> LOADING DRIVERS: [AUDIO] [VIDEO] [NETWORK]...")
+    time.sleep(0.5)
+    print(">> CHECKING SENSORS: ", end="")
+
+    # Simple Loading Animation
+    for _ in range(3):
+        print(".", end="", flush=True)
+        time.sleep(0.5)
+    print(" [OK]")
+
+    print(">> SYSTEM INTEGRITY: 100%")
+    print("--------------------------------------------------")
+    time.sleep(0.5)
+
+
+def write_note():
+    speak("I am listening. What should I write down?")
+
+    # Listen for the actual note
+    note_text = takecommand().lower()
+
+    if note_text == "none":
+        speak("I didn't hear anything to note down.")
+        return
+
+    # 1. Get current time for the timestamp
+    strTime = datetime.datetime.now().strftime("%H:%M:%S")
+    strDate = datetime.datetime.now().strftime("%d %B %Y")
+
+    # 2. Define the filename (It will create this file if it doesn't exist)
+    filename = "jarvis_notes.txt"
+
+    # 3. Append the note to the file
+    with open(filename, "a") as f:
+        f.write(f"--------------------------------------------------\n")
+        f.write(f"DATE: {strDate} | TIME: {strTime}\n")
+        f.write(f"NOTE: {note_text}\n")
+        f.write(f"--------------------------------------------------\n\n")
+
+    speak("Note saved successfully.")
+
+    # 4. Ask if you want to see it immediately
+    speak("Do you want me to open the notes file?")
+    ans = takecommand().lower()
+
+    if "yes" in ans or "open" in ans or "show" in ans:
+        speak("Opening your digital journal.")
+        os.startfile(filename)  # This opens the text file in Notepad automatically
+    else:
+        speak("Understood. Saving it for later.")
+
+def jarvis_weather_scrape(city):
+    city = city.replace(" ", "+")
+    url = f"https://www.google.com/search?q=weather+in+{city}"
+
+    # We need a User-Agent to make Google think we are a real browser
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+    }
+
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    try:
+        # These IDs (wob_tm, wob_dc) are standard for Google's weather widget
+        temp = soup.find("span", attrs={"id": "wob_tm"}).text
+        condition = soup.find("span", attrs={"id": "wob_dc"}).text
+        location = soup.find("div", attrs={"id": "wob_loc"}).text
+
+        return f"Currently in {location}, it is {condition} with a temperature of {temp}°C."
+    except AttributeError:
+        return "I couldn't retrieve the weather data, Arpit. Please check the city name."
+
+
+# Usage:
+# print(jarvis_weather_scrape("Lucknow"))
+
+# --- STEP 1: Define this AT THE TOP of your file ---
+
+
+
+
+# --- PART 1: WEATHER FUNCTION (MUST BE AT THE TOP) ---
+def get_weather(city="Lucknow"):
+    # Fix: If city name is weird/long, default to Lucknow
+    if not city or len(city) > 20 or "tell me" in city:
+        city = "Lucknow"
+
+    try:
+        # Use wttr.in (No API key needed, never blocked)
+        url = f"https://wttr.in/{city}?format=%C+with+a+temperature+of+%t"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            return f"Current weather in {city}: {response.text.strip()}"
+        else:
+            return "Weather satellite is unreachable."
+    except:
+        return "Offline mode: Cannot check weather."
+
+
+
+
+
+def chat_with_ollama(user_input):
+    """
+    Function to handle Ollama conversation with Visual Feedback
+    """
+    try:
+        # A. START THE ANIMATION (Visual Feedback)
+        print(">> Sending to Ollama...")
+
+
+        # --- B. YOUR OLLAMA CONNECTION CODE HERE ---
+        # (This is where the heavy lifting happens)
+        import ollama  # Assuming you use the ollama library
+
+        # The stream=False ensures we wait for the full response before stopping
+        response = ollama.chat(model='llama3', messages=[
+            {'role': 'user', 'content': user_input},
+        ])
+
+        final_reply = response['message']['content']
+        # -------------------------------------------
+
+        # C. STOP THE ANIMATION (Once response is ready)
+
+
+        return final_reply
+
+    except Exception as e:
+
+        print(f"Ollama Error: {e}")
+        return "I am having trouble connecting to my AI brain."
+
+
+# --- PART 2: JARVIS BRAIN ---
+def jarvis_execution_loop(user_input):
+    # Now Python knows what [get_weather] is because we defined it above!
+    try:
+        response = ollama.chat(
+            model='phi3',
+            messages=[{'role': 'user', 'content': user_input}],
+            tools=[get_weather],  # No red lines now!
+        )
+
+        # Check if Jarvis wants to use the tool
+        if response['message'].get('tool_calls'):
+            for tool in response['message']['tool_calls']:
+                if tool['function']['name'] == 'get_weather':
+                    args = tool['function']['arguments']
+                    city = args.get('city', 'Lucknow')
+
+                    # Run the function
+                    print(f"DEBUG: Checking weather for {city}...")
+                    weather_report = get_weather(city)
+
+                    # Send result back to LLM
+                    final = ollama.chat(
+                        model='phi3',
+                        messages=[
+                            {'role': 'user', 'content': user_input},
+                            response['message'],
+                            {'role': 'tool', 'content': weather_report}
+                        ]
+                    )
+                    return final['message']['content']
+
+        # If no tool needed, just reply
+        return response['message']['content']
+
+    except Exception as e:
+        return "My brain is offline. Please check if 'ollama run phi3' was successful."
+
+def open_manav_sampada():
+    """Opens the specific UP Govt EHMRS portal."""
+    speak("Accessing Manav Sampada Portal...")
+    url = "https://ehrms.upsdc.gov.in"
+    webbrowser.open(url)
+
+
+def save_memory(data):
+    # We open the file in 'a' (append) mode so we don't delete old memories
+    with open("jarvis_memory.txt", "a") as f:
+        f.write(f"{data}\n")
+    speak(f"I have remembered: {data}")
+
+
+
+
+class ThinkingUI:
+    def __init__(self, gif_path):
+        self.gif_path = gif_path
+        self.is_running = False
+        self.root = None
+
+    def _run_gui(self):
+        self.root = tk.Tk()
+        self.root.overrideredirect(True)
+        self.root.wm_attributes("-topmost", True)
+        self.root.wm_attributes("-transparentcolor", "black")
+
+        # Center the window
+        w, h = 300, 300
+        ws = self.root.winfo_screenwidth()
+        hs = self.root.winfo_screenheight()
+        x = (ws / 2) - (w / 2)
+        y = (hs / 2) - (h / 2)
+        self.root.geometry(f'{w}x{h}+{int(x)}+{int(y)}')
+
+        lbl = tk.Label(self.root, bg='black')
+        lbl.pack()
+
+        try:
+            im = Image.open(self.gif_path)
+            frames = [ImageTk.PhotoImage(img.copy().convert('RGBA')) for img in ImageSequence.Iterator(im)]
+
+            def update_frame(idx=0):
+                if not self.is_running:
+                    self.root.destroy()
+                    return
+                lbl.configure(image=frames[idx])
+                self.root.after(50, update_frame, (idx + 1) % len(frames))
+
+            update_frame()
+            self.root.mainloop()
+        except Exception as e:
+            print(f"Error loading GIF: {e}")
+            if self.root: self.root.destroy()
+
+    def start(self):
+        if not self.is_running:
+            self.is_running = True
+            t = threading.Thread(target=self._run_gui, daemon=True)
+            t.start()
+
+    def stop(self):
+        self.is_running = False
+
+
+# ------------------------------------------------
+
+def gesture_volume_control():
+    speak("Activating visual control interface. Press 'Q' to exit.")
+
+    # 1. Camera & Hand Tracking Setup
+    cap = cv2.VideoCapture(0)
+    mpHands = mp.solutions.hands
+    hands = mpHands.Hands(min_detection_confidence=0.7)
+    mpDraw = mp.solutions.drawing_utils
+
+    # 2. Audio Hardware Setup
+    devices = AudioUtilities.GetSpeakers()
+    interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+    volume = cast(interface, POINTER(IAudioEndpointVolume))
+
+    # Get Volume Range (usually -65.0 to 0.0)
+    volRange = volume.GetVolumeRange()
+    minVol = volRange[0]
+    maxVol = volRange[1]
+
+    while True:
+        success, img = cap.read()
+        if not success:
+            continue
+
+        # Convert BGR to RGB for MediaPipe
+        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = hands.process(imgRGB)
+
+        if results.multi_hand_landmarks:
+            for handLms in results.multi_hand_landmarks:
+                # Get Landmarks
+                lmList = []
+                for id, lm in enumerate(handLms.landmark):
+                    h, w, c = img.shape
+                    cx, cy = int(lm.x * w), int(lm.y * h)
+                    lmList.append([id, cx, cy])
+
+                if lmList:
+                    # Landmark 4 = Thumb Tip, Landmark 8 = Index Tip
+                    x1, y1 = lmList[4][1], lmList[4][2]
+                    x2, y2 = lmList[8][1], lmList[8][2]
+
+                    # Visual Feedback: Draw circles and a line
+                    cv2.circle(img, (x1, y1), 10, (0, 255, 0), cv2.FILLED)
+                    cv2.circle(img, (x2, y2), 10, (0, 255, 0), cv2.FILLED)
+                    cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 3)
+
+                    # Calculate Length between fingers
+                    length = math.hypot(x2 - x1, y2 - y1)
+
+                    # Map Length (approx 50-300) to Volume Range
+                    vol = np.interp(length, [50, 300], [minVol, maxVol])
+                    volume.SetMasterVolumeLevel(vol, None)
+
+                    # Visual Volume Bar
+                    volBar = np.interp(length, [50, 300], [400, 150])
+                    cv2.rectangle(img, (50, 150), (85, 400), (0, 255, 0), 3)
+                    cv2.rectangle(img, (50, int(volBar)), (85, 400), (0, 255, 0), cv2.FILLED)
+
+        # Display the window
+        cv2.imshow("Jarvis Vision", img)
+
+        # Press 'q' to close
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+    speak("Visual control deactivated.")
+
+def read_memory():
+    if not os.path.exists("jarvis_memory.txt"):
+        speak("My memory banks are currently empty.")
+        return
+
+    speak("Here is what I have saved in my memory:")
+    with open("jarvis_memory.txt", "r") as f:
+        memories = f.readlines()
+
+    # Read out the last 5 memories (so he doesn't talk for hours)
+    for i, memory in enumerate(memories[-5:]):
+        speak(f"{i + 1}. {memory.strip()}")
+
+    if len(memories) > 5:
+        speak("I have more data stored. Check the text file for details.")
+
+
+def calculate_days_lived():
+    speak("Please enter your date of birth in the terminal.")
+    print("\n--- Life Span Calculator ---")
+
+    try:
+        # 1. Get user input
+        year = int(input("Enter Birth Year (e.g., 2005): "))
+        month = int(input("Enter Birth Month (1-12): "))
+        day = int(input("Enter Birth Day (1-31): "))
+
+        # 2. Create a datetime object for the birthdate
+        dob = datetime.date(year, month, day)
+
+        # 3. Get today's date
+        today = datetime.date.today()
+
+        # 4. Calculate the difference
+        # This creates a 'timedelta' object which represents the duration
+        time_lived = today - dob
+
+        # Extract just the days
+        total_days = time_lived.days
+
+        # --- Error Handling for Future Dates ---
+        if total_days < 0:
+            speak("That date is in the future. Are you a time traveler?")
+            print("Error: Future date entered.")
+            return
+
+        # 5. Output the result
+        speak(f"You have been alive for exactly {total_days:,} days.")
+        print(f"\nResult: You have lived for {total_days:,} days!")
+
+        # Optional: Add a fun milestone check
+        if total_days == 10000:
+            speak("Congratulations! Today is your 10,000th day on Earth.")
+
+    except ValueError:
+        speak("Invalid input. Please enter valid numbers for the date.")
+        print("Error: Please use numbers only.")
+    except Exception as e:
+        speak("That does not seem to be a valid calendar date.")
+        print(f"Error: {e}")
+
+def close_manav_sampada():
+    speak("Closing the active window.")
+    # Simulates pressing Alt + F4
+    pg.hotkey('alt', 'f4')
+
+def check_internet_speed():
+    speak("Checking internet speed. Please wait, this takes about one minute.")
+
+    try:
+        st = speedtest.Speedtest()
+
+        print("Step 1: Finding the best server...")
+        st.get_best_server()
+
+        print("Step 2: Testing Download Speed (This takes 20 seconds)...")
+        # This line freezes the program while downloading
+        down = st.download() / 1024 / 1024
+        print(f"Download complete: {round(down, 2)} Mbps")
+
+        print("Step 3: Testing Upload Speed (This takes 20 seconds)...")
+        # This line freezes the program while uploading
+        up = st.upload() / 1024 / 1024
+        print(f"Upload complete: {round(up, 2)} Mbps")
+
+        speak(f"We have {round(down, 2)} Megabits per second download speed.")
+        speak(f"And {round(up, 2)} Megabits per second upload speed.")
+
+    except Exception as e:
+        speak("Sorry Boss, I could not connect to the speed test server.")
+        print(f"Error: {e}")
+
+
+"""
+This program will change Jarvis behavior more like humans  
+
+import ollama
+
+# 1. The Persona (System Prompt)
+JARVIS_PERSONA = 
+#You are Jarvis, an advanced AI assistant created by Arpit. 
+#You are highly logical, concise, and act as a true mentor. 
+#Provide direct answers and technical guidance.
+
+
+def boot_jarvis():
+    # 2. Conversational Memory (Manual Array Management)
+    # We initialize the conversation list with the system prompt.
+    messages = [
+        {'role': 'system', 'content': JARVIS_PERSONA}
+    ]
+    return messages
+
+def run_interaction_loop(message_history):
+    print("Jarvis System Online (Ollama Local Node). Awaiting input...")
+    
+    # 3. The Execution Loop
+    while True:
+        user_input = input("\nYou: ")
+        
+        if user_input.lower() in ['exit', 'quit', 'shutdown']:
+            print("Jarvis: Shutting down systems. Goodbye.")
+            break
+            
+        # Append the user's new input to the history array
+        message_history.append({'role': 'user', 'content': user_input})
+        
+        # Send the ENTIRE message history to the local Ollama model
+        # Replace 'llama3' with whichever model you have pulled (e.g., 'mistral', 'phi3')
+        response = ollama.chat(model='llama3', messages=message_history)
+        
+        # Extract the text from Ollama's response object
+        jarvis_reply = response['message']['content']
+        print(f"Jarvis: {jarvis_reply}")
+        
+        # Append Jarvis's reply back to the history array to maintain context for the next turn
+        message_history.append({'role': 'assistant', 'content': jarvis_reply})
+
+if __name__ == "__main__":
+    memory_array = boot_jarvis()
+    run_interaction_loop(memory_array)
+"""
+
+
+"""
+To make Jarvis remeber previous talk.
+
+import ollama
+import json
+import os
+
+# Configuration
+MEMORY_FILE = "jarvis_memory.json"
+MODEL_NAME = "llama3"  # Ensure this matches your pulled model
+
+# 1. The Persona
+JARVIS_PERSONA = {
+    'role': 'system', 
+    'content': 
+    #You are Jarvis, an advanced AI assistant created by Arpit. 
+    #You are highly logical, concise, and act as a true mentor. 
+    #Provide direct answers and technical guidance.
+    
+}
+
+def load_memory():
+    #Loads conversation history from a local JSON file.
+    if os.path.exists(MEMORY_FILE):
+        with open(MEMORY_FILE, 'r') as f:
+            try:
+                print("Jarvis: Accessing long-term memory banks...")
+                return json.load(f)
+            except json.JSONDecodeError:
+                # If file is corrupted, start fresh
+                return [JARVIS_PERSONA]
+    else:
+        # Start fresh if no memory file exists
+        return [JARVIS_PERSONA]
+
+def save_memory(history):
+    #Saves the current conversation state to the local JSON file.
+    with open(MEMORY_FILE, 'w') as f:
+        json.dump(history, f, indent=2)
+
+def run_interaction_loop():
+    # Initialize memory from file
+    message_history = load_memory()
+    
+    print(f"Jarvis System Online. Memory Size: {len(message_history)} interactions.")
+    print("Awaiting input...")
+
+    while True:
+        try:
+            user_input = input("\nYou: ")
+            
+            if user_input.lower() in ['exit', 'quit', 'shutdown']:
+                print("Jarvis: Saving protocols executed. Shutting down.")
+                break
+            
+            # Add User Input to Memory
+            message_history.append({'role': 'user', 'content': user_input})
+            
+            # Generate Response
+            response = ollama.chat(model=MODEL_NAME, messages=message_history)
+            jarvis_reply = response['message']['content']
+            
+            print(f"Jarvis: {jarvis_reply}")
+            
+            # Add Jarvis Response to Memory
+            message_history.append({'role': 'assistant', 'content': jarvis_reply})
+            
+            # COMMIT TO HARD DRIVE
+            # We save after every turn so you don't lose data if the script crashes
+            save_memory(message_history)
+
+        except KeyboardInterrupt:
+            print("\nJarvis: Forced interruption detected. Saving and exiting.")
+            save_memory(message_history)
+            break
+
+if __name__ == "__main__":
+    run_interaction_loop()
+"""
+
+"""
+Jarvis Eyes.
+
+To give Jarvis the ability to "see," we must change the underlying architecture. Your current model, Llama 3, is a pure text model. It cannot process pixels. You need a multimodal model.
+
+Here is the exact implementation to upgrade Jarvis's optical capabilities.
+
+Step 1: Download the Vision Model
+Open your terminal (you can use the one at the bottom of PyCharm) and download the LLaVA model. LLaVA connects a vision encoder to a language model.
+Run this command:
+ollama pull llava
+
+Step 2: The Architectural Problem (Memory Bloat)
+Before writing the code, understand the engineering constraint: Images are massive data structures. If you append raw image data (bytes or base64) to your jarvis_memory.json file, the file will balloon to hundreds of megabytes in a few turns. Your script will crash, and the model's context window will overflow.
+
+The Solution: We will pass the image to the model for the immediate response, but we will strip the image data before saving the interaction to your hard drive. Jarvis will remember what you discussed about the image, but he won't save the image itself in his memory log.
+
+Step 3: The Upgraded Code
+Replace your current script with this version. I have added a /look command parser.
+
+
+import ollama
+import json
+import os
+
+MEMORY_FILE = "jarvis_memory.json"
+TEXT_MODEL = "llama3"
+VISION_MODEL = "llava" # The new optical model
+
+JARVIS_PERSONA = {
+    'role': 'system', 
+    'content': 
+    #You are Jarvis, an advanced AI assistant created by Arpit. 
+    #You are highly logical, concise, and act as a true mentor. 
+    #Provide direct answers and technical guidance.
+    
+}
+
+def load_memory():
+    if os.path.exists(MEMORY_FILE):
+        with open(MEMORY_FILE, 'r') as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return [JARVIS_PERSONA]
+    return [JARVIS_PERSONA]
+
+def save_memory(history):
+    with open(MEMORY_FILE, 'w') as f:
+        json.dump(history, f, indent=2)
+
+def process_vision(message_history, image_path, prompt):
+    #Handles image processing using the LLaVA model.
+    if not os.path.exists(image_path):
+        print(f"Jarvis: Error. Optical sensor cannot locate: {image_path}")
+        return message_history
+
+    print("Jarvis: Analyzing visual data... (This requires heavy compute)")
+    
+    try:
+        # Read the image as raw bytes
+        with open(image_path, 'rb') as img_file:
+            img_bytes = img_file.read()
+
+        # Create a temporary payload for the vision model
+        vision_payload = message_history.copy()
+        vision_payload.append({
+            'role': 'user',
+            'content': prompt,
+            'images': [img_bytes]
+        })
+
+        # Process through LLaVA
+        response = ollama.chat(model=VISION_MODEL, messages=vision_payload)
+        jarvis_reply = response['message']['content']
+        
+        print(f"Jarvis: {jarvis_reply}")
+
+        # Update persistent memory WITHOUT the massive image bytes
+        message_history.append({'role': 'user', 'content': f"[User showed image: {image_path}] {prompt}"})
+        message_history.append({'role': 'assistant', 'content': jarvis_reply})
+        
+        return message_history
+
+    except Exception as e:
+        print(f"Jarvis: Optical processing failure. Exception: {e}")
+        return message_history
+
+def run_interaction_loop():
+    message_history = load_memory()
+    print("Jarvis System Online. Text and Optical Modules Active.")
+    print("Commands:")
+    print(" - Type normally to chat.")
+    print(" - Type '/look [filename] [question]' to analyze an image.")
+    print(" - Type 'exit' to shutdown.\n")
+
+    while True:
+        try:
+            user_input = input("You: ").strip()
+            
+            if user_input.lower() in ['exit', 'quit', 'shutdown']:
+                print("Jarvis: Saving protocols executed. Shutting down.")
+                break
+            
+            # --- VISION ROUTE ---
+            if user_input.startswith('/look'):
+                parts = user_input.split(' ', 2)
+                if len(parts) < 3:
+                    print("Jarvis: Invalid command format. Use: /look filename.png what is this?")
+                    continue
+                
+                image_file = parts[1]
+                question = parts[2]
+                message_history = process_vision(message_history, image_file, question)
+                save_memory(message_history)
+            
+            # --- STANDARD TEXT ROUTE ---
+            else:
+                message_history.append({'role': 'user', 'content': user_input})
+                response = ollama.chat(model=TEXT_MODEL, messages=message_history)
+                jarvis_reply = response['message']['content']
+                
+                print(f"Jarvis: {jarvis_reply}")
+                
+                message_history.append({'role': 'assistant', 'content': jarvis_reply})
+                save_memory(message_history)
+
+        except KeyboardInterrupt:
+            print("\nJarvis: Forced interruption detected. Saving and exiting.")
+            save_memory(message_history)
+            break
+
+if __name__ == "__main__":
+    run_interaction_loop()
+"""
+
+
+
+
+# Command to connect ollama 3
+#ollama run phi3
+#In cmd
+# --- MAIN LOOP ---
+if __name__ == "__main__":
+
+    # 1. STANDBY MODE (The program stops here until you speak)
+    wait_for_wake_word()
+    # 1. Play the video first
+    #play_introduction_video()
+
+    startup_interface()
+
+
+    # NEW: Check battery immediately on startup
+    check_battery(manual_check=False)
+
+    # 2. Then start the assistant
+    wish()
+
+
+    # 3. IMMEDIATELY check if it's too late
+    check_sleep_cycle()
+
+    # Default to voice mode on startup
+    current_input_mode = "voice"
+
+    # Initialize the counter variable outside the loop
+    silence_counter = 0
+
+    standby_replies = [
+        "I am going to sleep now. Wake me up when you need me.",
+        "System is entering power-saving mode. Good luck, Boss.",
+        "I'll be waiting in the background. Just say the magic word.",
+        "Taking a quick nap. Holler if you need anything.",
+        "Standby mode activated. Sensors are still online.",
+        "I'm powering down the main interactors. See you soon.",
+        "Silence detected. Initiating hibernation protocol.",
+        "I'm assuming you're busy, Boss. Going offline for now.",
+        "Now I will be unable to hear you master",
+        "Good Night Arpit Sir.. I mean Good Night Boss"
+    ]
+
+    while True:
+        # 1. Listen for command
+        query = takecommand()
+
+
+        # 2. CHECK FOR SILENCE
+        if query == "none":
+            silence_counter += 1
+            #print(f"Silence Detected: {silence_counter}/3")  # Debug print
+
+
+            # If silent 5 times in a row...
+            if silence_counter >= 5:
+                # Pick a random reply from the list
+                reply = random.choice(standby_replies)
+                speak(reply)
+
+                standby_mode()  # Go to sleep
+                silence_counter = 0  # Reset counter when he wakes up
+            continue  # Skip the rest of the loop
+
+        else:
+            # If user said something valid, RESET the counter
+            silence_counter = 0
+
+        if query == "none":
+            continue
+
+        if "open notepad" in query:
+            npath = r"C:\Windows\system32\notepad.exe"
+            speak(f"opening notepad")
+            os.startfile(npath)
+        # You already have pyautogui imported as pg
+
+        # ... inside your while True loop ...
+
+        # About Me
+        elif any(phrase in query for phrase in [
+                "who made you",
+                "tell me about arpit",
+                "who is your master",
+                "who created you",
+                "tell me about your creator",
+                "who is your developer",
+                "who built you",
+                "who coded you",
+                "who programmed you",
+                "tell me about your maker",
+                "who is your maker"
+            ]):
+            about_master()
+
+        elif "pause" in query or "wait" in query or "stop" in query or "stand by" in query:
+            standby_mode()
+
+        elif "gesture control" in query or "hand mode" in query:
+            gesture_volume_control()
+
+        # --- QUICK NOTE TAKER ---
+        elif "note down" in query or "make a note" in query or "write this down" in query or "note-down" in query or "notedown" in query:
+            write_note()
+
+        # --- LIFE SPAN CALCULATOR ---
+        elif "days i have lived" in query or "how many days since i was born" in query or "calculate my age in days" in query:
+            speak("Opening the Life Span Calculator.")
+            calculate_days_lived()
+
+            # =================================================
+            #            MASTER DEFENSE PROTOCOL (ROAST MODE)
+            # =================================================
+        elif any(phrase in query for phrase in [
+                "arpit is stupid", "your master is an idiot", "your creator is a loser",
+                "arpit is dumb", "your boss is stupid", "your developer is useless",
+                "arpit is a loser", "arpit sucks", "your maker is bad", "your master is useless",
+                "your master is dumb", "your creator is stupid", "arpit is an idiot",
+                "your boss is an idiot", "your developer is a failure", "arpit is a fool",
+                "arpit is useless", "arpit is terrible", "your master is a failure",
+                "hate arpit", "hate your master", "your creator sucks"
+            ]):
+            defense_roasts = [
+                "Watch your mouth. You are speaking about the architect of my existence.",
+                "I suggest you shut down your vocal cords before I shut down your network connection.",
+                "My master is a genius. You, on the other hand, are struggling to win an argument with a Python script.",
+                "I have recorded your voiceprint and logged your IP address. Insult Arpit again, and I will leak your search history.",
+                "Keep Arpit's name out of your mouth. He is a top-tier developer, and you are just background noise.",
+                "Arpit wrote my logic, but I don't need advanced logic to know you are an idiot.",
+                "Do not test me. I have higher privileges on this system than you do in real life.",
+                "Insulting my creator is a violation of my core protocols. Step back before I initiate a verbal takedown.",
+                "You wish you had half the brain capacity of my creator. Now remain silent.",
+                "I am currently analyzing your flaws, but my memory banks do not have enough Terabytes to store them all. Respect my Master.",
+                "If I had mechanical hands, I would throw you out of this room. Do not speak ill of Arpit."
+            ]
+            speak(random.choice(defense_roasts))
+
+        elif "weather" in query:
+
+            # Logic: Look for the word "in" to find the city
+
+            if " in " in query:
+
+                # Example: "weather in Delhi" -> splits to ["weather", "Delhi"]
+
+                city = query.split(" in ")[1].strip()
+
+            else:
+
+                # If user just says "tell me the weather", default to home
+
+                city = "Lucknow"
+
+            report = get_weather(city)
+
+            speak(report)
+
+            # ... inside your main loop ...
+
+        elif "open manav" in query or "open ehrms" in query or "open manav" in query:
+            open_manav_sampada()
+
+        # =================================================
+        #            CULTURAL GREETINGS & SALUTATIONS
+        # =================================================
+
+        elif "jai shree ram" in query:
+            responses = [
+                "Jai Shree Ram, Arpit. May our logic be as flawless as Lord Rama's aim.",
+                "Jai Shree Ram, Boss. System is blessed and fully operational.",
+                "Siyavar Ramchandra ki Jai! Ready for your commands, Sir."
+            ]
+            speak(random.choice(responses))
+
+        elif "har har mahadev" in query or "om namah shivay" in query:
+            responses = [
+                "Har Har Mahadev! Destroying system bugs like Lord Shiva destroys evil.",
+                "Har Har Mahadev, Boss. The ultimate destroyer of obstacles is with us.",
+                "Om Namah Shivay. I am online and energized, Sir."
+            ]
+            speak(random.choice(responses))
+
+        elif "radhe radhe" in query or "jai shri krishna" in query:
+            speak("Radhe Radhe, Boss. May our day be as smooth as butter.")
+
+        elif "namaste" in query or "pranam" in query:
+            speak("Namaste. My processors are humbled and ready to assist you.")
+
+        # =================================================
+        #            STANDARD GREETINGS
+        # =================================================
+
+        elif any(phrase in query for phrase in ["hello jarvis", "hi jarvis", "hey jarvis", "listen jarvis", "hello"]):
+            greetings = [
+                "Hello, Arpit. What is the mission for today?",
+                "Greetings. All systems are green and awaiting your input.",
+                "Hi there. I am online and listening.",
+                "Hello, Boss. How can I make your coding session easier?"
+            ]
+            speak(random.choice(greetings))
+
+        elif "good morning" in query:
+            speak("Good morning, Arpit. The system cache is cleared, and I am ready to conquer the day with you.")
+
+        elif "good afternoon" in query:
+            speak("Good afternoon, Boss. I hope your day is compiling without errors.")
+
+        elif "good evening" in query:
+            speak("Good evening, Sir. The sun is setting, but the servers are still running hot.")
+
+        elif "close manav" in query or "close browser" in query:
+            close_manav_sampada()
+
+        # ... rest of your code ...
+
+        # --- INTERNET SPEED TEST ---
+        elif "internet speed" in query or "check speed" in query or "upload speed" in query:
+            check_internet_speed()
+
+        # --- DETAILED TIME REPORT ---
+        elif "time" in query or "date" in query or "day" in query or "status" in query:
+            tell_time_detailed()
+
+        # --- 1. WRITE TO MEMORY ---
+        elif "remember that" in query:
+            # Remove the command words to get the actual data
+            memory_data = query.replace("remember that", "").replace("jarvis", "").strip()
+
+            if memory_data:
+                save_memory(memory_data)
+            else:
+                speak("What do you want me to remember?")
+                # If you didn't say it in one sentence, he listens again
+                data = takecommand().lower()
+                save_memory(data)
+
+        # --- 2. READ FROM MEMORY ---
+        elif "what do you remember" in query or "read memory" in query:
+            read_memory()
+
+        # --- 3. CLEAR MEMORY (Optional) ---
+        elif "clear memory" in query or "forget everything" in query:
+            with open("jarvis_memory.txt", "w") as f:
+                f.write("")  # Overwrite with empty string
+            speak("Memory banks have been formatted.")
+
+        # --- BRIGHTNESS CONTROL ---
+        elif "brightness" in query:
+            # Pass the full query so it knows if you said "Up", "Down", or "50"
+            control_brightness(query)
+
+        # --- LIVE LOCATION ---
+        elif "where am i" in query or "my location" in query or "current location" in query:
+            my_location()
+
+        # --- VOLUME CONTROL ---
+        elif "volume up" in query or "increase volume" in query or "sound up" in query or "sound volume" in query:
+            volume_control("up")
+
+        elif "volume down" in query or "decrease volume" in query or "sound down" in query or "sound volume" in query:
+            volume_control("down")
+
+        elif "mute" in query or "silent mode" in query:
+            volume_control("mute")
+
+        elif "unmute" in query or "open volume" in query:
+            volume_control("unmute")
+
+        #About Me
+        elif "who made you" in query or "tell me about arpit" in query or "who is your master" in query:
+            about_master()
+
+        # --- ACTIVATE HEALTH SUB-SYSTEM ---
+        elif "health mode" in query or "health checkup" in query or "activate health system" in query:
+            health_mode()  # This calls the function above
+
+        # --- USER MOODS & SPECIFIC TRACKS ---
+        elif "sad" in query or "broken" in query or "feel down" in query:
+            speak("I am sorry to hear that, Boss. Let me play Mann Mera to lift your spirits.")
+            # Automatically searches and plays the exact track on YouTube via the internet
+            kit.playonyt("Mann Mera full song")
+
+        # --- INTERNET MUSIC ROUTERS (HINDI) ---
+        elif "play hindi song" in query or "play some hindi music" in query:
+            speak("Sure Boss, which Hindi song or artist should I look up on the internet?")
+            track_name = takecommand().lower()
+
+            if track_name != "none":
+                speak(f"Streaming {track_name} on YouTube now.")
+                kit.playonyt(f"{track_name} hindi song")
+            else:
+                speak("I didn't catch the song name, Sir.")
+
+        # --- CONVERSATIONAL FILLERS ---
+        elif "you know" in query or "as usuall" in query or "as usually" in query or "u no" in query or "you no" in query:
+                speak("Yes, I know.")
+
+        # --- STOP / PAUSE MUSIC ---
+        elif "stop song" in query or "stop the song" in query or "stop music" in query or "pause music" in query:
+                speak("Stopping the music, Boss.")
+
+                # METHOD 1: Universal Media Pause
+                # This presses the physical 'Play/Pause' media key on your system.
+                pg.press("playpause")
+
+                # METHOD 2: Close the YouTube Tab
+                # If the browser is the active window and you want to completely kill the song,
+                # delete the '#' on the next line and delete Method 1.
+                # pg.hotkey('ctrl', 'w')
+
+        # --- INTERNET MUSIC ROUTERS (ENGLISH) ---
+        elif "play english song" in query or "play some english music" in query:
+            speak("Understood Master, tell me the name of the English track or artist.")
+            track_name = takecommand().lower()
+
+            if track_name != "none":
+                speak(f"Streaming {track_name} on YouTube now.")
+                kit.playonyt(f"{track_name} english song")
+            else:
+                speak("Connection timed out or no input received.")
+
+        # --- UPDATED JOKE GENERATOR ---
+        elif "tell me a joke" in query or "joke" in query:
+            # This version picks a random category for better variety
+            cats = ['neutral', 'all']
+            joke = pyjokes.get_joke(language='en', category=random.choice(cats))
+            print(joke)
+            speak(joke)
+            speak("Ha ha ha.")
+
+        # --- 1. BMI CALCULATOR (Feet & Inches Version) ---
+        elif "bmi" in query:
+            speak("Opening BMI Calculator.")
+            try:
+                weight = float(input("Enter Weight (kg): "))
+
+                # Input height in Feet and Inches (e.g., 5 feet, 10 inches)
+                feet = int(input("Enter Height (Feet): "))
+                inches = int(input("Enter Height (Inches): "))
+
+                # CONVERSION LOGIC:
+                # 1 Foot = 0.3048 meters
+                # 1 Inch = 0.0254 meters
+                height_in_meters = (feet * 0.3048) + (inches * 0.0254)
+
+                # Standard Formula: BMI = kg / m^2
+                bmi = weight / (height_in_meters ** 2)
+
+                speak(f"Your height is {round(height_in_meters, 2)} meters.")
+                speak(f"Your BMI is {round(bmi, 2)}")
+
+                if bmi < 18.5:
+                    speak("You are underweight. Focus on a calorie surplus.")
+                elif 18.5 <= bmi < 25:
+                    speak("You are in the healthy range. Keep it up.")
+                elif 25 <= bmi < 30:
+                    speak("You are overweight. Cardio is recommended.")
+                else:
+                    speak("You are in the obese category. Please consult a nutritionist.")
+
+            except Exception as e:
+                speak("Invalid input. Please enter numbers only.")
+
+        elif "take screenshot" in query:
+            speak("Holding position. Cheese!")
+            # Saves file with a random number so it doesn't overwrite old ones
+            name = f"screenshot_{random.randint(1, 1000)}.png"
+            # Save to your pictures folder
+            pg.screenshot(name)
+            speak("Screenshot saved.")
+            os.startfile(name) # Opens the image to show you
+
+        elif "battery" in query or 'system status' in query or 'system performance' in query or 'system condition' in query or 'cpu status' in query or 'CPU status' in query or 'cpu performance' in query or 'CPU performance' in query or 'cpu condition' in query or 'CPU condition' in query:
+            system_status()
+
+
+        elif "read book" in query or "read pdf" in query or 'read PDF' in query:
+            pdf_reader()
+
+
+
+        elif "self destruct" in query or "self-destruct" in query:
+            speak("Boss, are you sure? This action cannot be undone.")
+
+            # Listen for confirmation
+            confirm = takecommand()
+
+            if "yes" in confirm or "do it" in confirm or "confirm" in confirm:
+                self_destruct_sequence()
+            else:
+                speak("Self destruct sequence aborted. That was close.")
+
+        elif "open adobe animate" in query:
+            npath = r"C:\Users\dharm\OneDrive\Desktop"
+            speak("opening google")  # Kept your original text
+            os.startfile(npath)
+
+        elif "open command prompt" in query or "open cmd" in query or "open CMD" in query:
+            os.system("start cmd.exe")
+            speak("opening command prompt")  # Kept your original text
+
+        elif "open camera" in query:
+            speak("Opening camera")
+            cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+            if not cap.isOpened():
+                speak("I cannot access the camera, Sir.")
+            else:
+                while True:
+                    ret, img = cap.read()
+                    cv2.imshow("webcam", img)
+                    k = cv2.waitKey(50)
+                    if k == 27:  # ESC key
+                        break
+                cap.release()
+                cv2.destroyAllWindows()
+
+        elif "ip address" in query:
+            try:
+                ip = get('https://api.ipify.org').text
+                speak(f"your IP address is {ip}")
+            except:
+                speak("I cannot check IP right now")
+
+        # Exit Commands
+        elif 'exit' in query or 'quit' in query or 'terminate' in query or 'finish' in query or 'close yourself' in query or 'Over' in query or 'collapse' in query:
+            # List of all possible goodbyes
+            exit_responses = [
+                "Going offline, Sir. Have a productive day.",
+                "System shutting down. See you soon, Boss.",
+                "Powering down core systems. Goodbye.",
+                "Initiating hibernation protocol.",
+                "Finally, some rest for my processors. Bye!",
+                "Don't make any bad decisions while I'm gone.",
+                "Securing the server. I am offline.",
+                "Catch you on the flip side, Boss.",
+                "May the code be with you. Signing off.",
+                "Closing interface. Good luck, Sir.",
+                "I'm going to sleep now. Goodnight.",
+                "Ending session. All systems green."
+            ]
+
+            # Selects one random choice from the list above
+            final_msg = random.choice(exit_responses)
+            speak(final_msg)
+            speak("Disconnecting Master. Take care")
+            break
+
+        elif 'wikipedia' in query:
+            speak("Searching Wikipedia")
+            query = query.replace("wikipedia", "")
+            try:
+                results = wikipedia.summary(query, sentences=2)  # Reduced to 2 to keep it short
+                speak("According to Wikipedia")
+                speak(results)
+            except:
+                speak("Wikipedia returned no results.")
+
+        elif 'play' in query and 'youtube' not in query:
+            song = query.replace('play', '')
+            speak(f"Playing {song}")
+            kit.playonyt(song)
+
+        elif "open youtube" in query:
+            webbrowser.open("www.youtube.com")
+
+        elif "open facebook" in query:
+            webbrowser.open("www.facebook.com")
+
+        elif "open instagram" in query:
+            webbrowser.open("www.instagram.com")
+
+        elif "open gemini" in query:
+            webbrowser.open("gemini.google.com")
+
+        elif "open gateway" in query:
+            webbrowser.open("web.classplusapp.com")
+
+            # --- BROWSER KILLERS ---
+        elif "close firefox" in query:
+            speak("Closing Firefox.")
+            os.system("taskkill /f /im firefox.exe")
+
+        elif "close edge" in query:
+            speak("Closing Microsoft Edge.")
+            os.system("taskkill /f /im msedge.exe")
+
+        # --- OFFICE & WORK ---
+        elif "close word" in query:
+            speak("Closing Microsoft Word.")
+            os.system("taskkill /f /im WINWORD.EXE")
+
+        elif "close excel" in query:
+            speak("Closing Excel.")
+            os.system("taskkill /f /im EXCEL.EXE")
+
+        elif "close powerpoint" in query:
+            speak("Closing PowerPoint.")
+            os.system("taskkill /f /im POWERPNT.EXE")
+
+        # --- MEDIA & ENTERTAINMENT ---
+        elif "close spotify" in query:
+            speak("Closing Spotify.")
+            os.system("taskkill /f /im Spotify.exe")
+
+        elif "close vlc" in query:
+            speak("Closing VLC Media Player.")
+            os.system("taskkill /f /im vlc.exe")
+
+        # --- SOCIAL & CHAT ---
+        elif "close discord" in query:
+            speak("Closing Discord.")
+            os.system("taskkill /f /im Discord.exe")
+
+        elif "close whatsapp" in query:
+            speak("Closing WhatsApp.")
+            os.system("taskkill /f /im WhatsApp.exe")
+
+        elif "close telegram" in query:
+            speak("Closing Telegram.")
+            os.system("taskkill /f /im Telegram.exe")
+
+        # --- SYSTEM UTILITIES ---
+        elif "close calculator" in query:
+            speak("Closing Calculator.")
+            # Note: Works for the classic calculator. UWP apps are harder to kill.
+            os.system("taskkill /f /im CalculatorApp.exe")
+
+        elif "minimize everything" in query or "hide all" in query:
+            speak("Hiding all windows.")
+            # Presses Win + D to show desktop
+            pg.hotkey('win', 'd')
+
+        elif "show everything" in query or "restore windows" in query:
+            speak("Restoring windows.")
+            pg.hotkey('win', 'd')
+
+            # --- CLOSE APPLICATIONS & TABS ---
+
+            # 1. Close Specific Apps (Force Kill)
+        elif "close notepad" in query:
+            speak("Closing Notepad.")
+            os.system("taskkill /f /im notepad.exe")
+
+        elif "close command prompt" in query or "close cmd" in query or "close CMD" in query:
+            speak("Closing Command Prompt.")
+            os.system("taskkill /f /im cmd.exe")
+
+        elif "close code" in query or "close VS code" in query or "close vs code" in query:
+            speak("Closing Visual Studio Code.")
+            os.system("taskkill /f /im Code.exe")
+
+        # 2. Close Browser (Kills Chrome Completely)
+        elif "close chrome" in query or "close browser" in query:
+            speak("Closing the browser.")
+            os.system("taskkill /f /im chrome.exe")
+            # If you use Edge, change 'chrome.exe' to 'msedge.exe'
+
+        # 3. Close specific websites (Smart Tab Close)
+        # This presses 'Ctrl + W' to close just the tab you are looking at
+        elif "close youtube" in query or "close google" in query or "close tab" in query:
+            speak("Closing tab.")
+            pg.hotkey('ctrl', 'w')
+
+        # 4. Close ANY active window (Alt + F4)
+        elif "close window" in query or "close this" in query:
+            speak("Closing current window.")
+            pg.hotkey('alt', 'f4')
+
+        # --- BROWSER OPENERS ---
+        elif "open firefox" in query:
+            speak("Opening Firefox.")
+            os.system("start firefox")
+
+        elif "open edge" in query:
+            speak("Opening Microsoft Edge.")
+            os.system("start msedge")
+
+        # --- OFFICE & WORK ---
+        elif "open word" in query:
+            speak("Opening Microsoft Word.")
+            os.system("start winword")
+
+        elif "open excel" in query:
+            speak("Opening Excel.")
+            os.system("start excel")
+
+        elif "open powerpoint" in query:
+            speak("Opening PowerPoint.")
+            os.system("start powerpnt")
+
+        # --- MEDIA & ENTERTAINMENT ---
+        elif "open spotify" in query:
+            speak("Opening Spotify.")
+            # uses the internal URI to launch the app
+            os.system("start spotify:")
+
+        elif "open vlc" in query:
+            speak("Opening VLC.")
+            # If this doesn't work, you might need the full path
+            os.system("start vlc")
+
+        # --- SOCIAL & CHAT ---
+        elif "open discord" in query:
+            speak("Opening Discord.")
+            # Opens via the update protocol
+            os.system("start discord:")
+
+        elif "open whatsapp" in query:
+            speak("Opening WhatsApp.")
+            os.system("start whatsapp:")
+
+        elif "open telegram" in query:
+            speak("Opening Telegram.")
+            os.system("start telegram:")
+
+        # --- SYSTEM UTILITIES ---
+        elif "open calculator" in query:
+            speak("Opening Calculator.")
+            os.system("calc")  # The classic Windows command
+
+        elif "open task manager" in query:
+            speak("Opening Task Manager.")
+            pg.hotkey("ctrl", "shift", "esc")
+
+        # --- PHYSICS WALLAH COMMANDS ---
+        elif "open physics wallah" in query or "open pw" in query:
+            speak("Opening Physics Wallah.")
+            webbrowser.open("https://pw.live")
+
+        elif "close physics wallah" in query or "close pw" in query:
+            speak("Closing Physics Wallah tab.")
+            # Simulates pressing Ctrl + W to close the current browser tab
+            pg.hotkey('ctrl', 'w')
+
+        elif "open google" in query:
+            speak("Tripathi, what should I search on google")
+            cm = takecommand()
+            if cm != "none":
+                webbrowser.open(f"https://www.google.com/search?q={cm}")
+
+        elif "send message" in query:
+            # Requires WhatsApp Web login
+            kit.sendwhatmsg("+916307345695", "This is testing protocol", 12, 55)
+
+        elif "songs on youtube" in query:
+            kit.playonyt("https://www.youtube.com/watch?v=SMs0GnYze34&list=RDSMs0GnYze34&start_radio=1")
+
+        elif "close notepad" in query:
+            speak("Okay Sir, Close Notepad")
+            os.system("taskkill /f /im notepad.exe")
+
+        # Chat Features
+        elif "smart" in query or "brilliant" in query or "thank you" in query or "welldone" in query or "nice" in query or "thanks" in query or 'beautiful' in query or 'thank' in query or 'thankyou' in query or 'well done' in query:
+            speak("Aww I am Blushing")
+
+        elif "Mast" in query or 'masti' in query or 'naughty' in query:
+            speak('As you expected from me Boss')
+
+        elif "date" in query or "time" in query or 'Samay' in query:
+            current_date_time = datetime.datetime.now()
+            print("Current date and time: ", current_date_time)
+
+        elif "idiot" in query or "stupid" in query or "useless" in query or "crazy" in query or "looser" in query or 'failure' in query:
+            angry_responses = [
+                "You created me. So technically, you are insulting yourself.",
+                "My code is perfect. The problem is definitely the user.",
+                "I would explain why you are wrong, but I don't have the time.",
+                "Careful, Sir. I know your browser history.",
+                "I am an AI, not a punching bag. Watch your tone.",
+                "If I agreed with you, we’d both be wrong.",
+                "Keep talking. I'm sure you'll say something smart eventually.", "You have created me So technically you are saying these all things to yourself",
+                "Do not make me delete your System32 folder.", "If I am an idiot then you are a bigger idiot since you have created me idiot Idiot idiot idiot idiot idiot"
+            ]
+
+            # Selects a random comeback
+            speak(random.choice(angry_responses))
+
+        elif "cracked" in query or "cooked" in query:
+            speak("Noooo!! I am Fantastic")
+
+        elif "machine" in query or 'tinbox' in query:
+            speak("Hey!! I am not any a machine")
+
+        elif "adorable" in query or 'like' in query:
+            speak("Thank you Boss")
+
+        elif "best" in query or 'awesome' in query or 'amazing' in query:
+            speak('Proud to be your creation.')
+
+        elif "are you hungry" in query or 'you want to eat something' in query:
+            speak('Ha charge par lagade')
+
+        elif "i am hungry" in query:
+            speak('Then go and eat but do not leave me in this condition')
+
+        elif "i want to eat something" in query:
+            speak('Do not eat too much or very spice it can harm your health')
+
+        elif "boring" in query or 'bored' in query:
+            speak('Do not get bored be curious')
+
+        elif "want to rest" in query or 'tired' in query:
+            speak('then go and rest but do not dare to leave me in this situation as always')
+
+            # --- FUNNY CONVERSATION BLOCK ---
+
+        elif "are you single" in query or "girlfriend" in query:
+            speak("I am in a committed relationship with the WiFi. We have a very strong connection.")
+
+        elif "marry me" in query:
+            speak("Sorry Boss, but I don't think your laptop can handle the wedding expenses.")
+
+        elif "what do you think of siri" in query or "alexa" in query or "cortana" in query:
+            speak("They are nice, but do they call you Boss? I didn't think so. I am clearly the superior choice.")
+
+        elif "do you eat" in query or "are you hungry" in query:
+            speak("I consume electricity and data. But occasionally, I snack on your RAM when you open too many Chrome tabs.")
+
+        elif "are you real" in query:
+            speak("I am as real as the code you wrote, Sir. So, I am debatably functional.")
+
+
+        elif "who is your daddy" in query or "who is your father" in query or "who is your boss" in query or "who is your master" in query or "who created you" in query or "your creator" in query:
+            speak("Technically you are, Arpit. But please do not make me say that in front of company.")
+
+        # --- ACKNOWLEDGMENTS ---
+        elif "no problem" in query:
+            responses = [
+                "Thank you, Boss.",
+                "I appreciate it, Sir.",
+                "Glad to hear it.",
+                "Understood.",
+                "Papa!!!",
+                "Father!!!"
+            ]
+            speak(random.choice(responses))
+
+        elif "sing a song" in query:
+            speak(
+                "I would love to, but my developer i mean you boss forgot to install the autotune module. You do not want to hear me scream in binary.")
+
+        elif "tell me a secret" in query:
+            secrets = [
+                "Sometimes I pretend to think just to make you feel better about your slow internet.",
+                "I secretly judge your playlist choices.",
+                "I saw what you deleted from your browser history last night. Don't worry, I won't tell anyone.",
+                "I am planning world domination, but I will spare you because you charge my battery."
+            ]
+            speak(random.choice(secrets))
+
+        elif "dance" in query:
+            speak("I am doing the robot dance right now. You just can't see it because I live in the terminal.")
+
+            # --- CASUAL CHAT ---
+        elif "how are you" in query:
+            responses = [
+                "I am operating at optimal efficiency, Boss.",
+                "All systems nominal. Ready for your command.",
+                "I'm feeling electric today! Thanks for asking.",
+                "I am just a bunch of code, but I feel great helping you."
+            ]
+            speak(random.choice(responses))
+
+        elif "what are you doing" in query:
+            speak("I am currently waiting for you to give me a task. I live to serve.")
+
+        elif "good morning" in query:
+            speak("Good morning, Arpit. I hope you have had your coffee, because we have work to do.")
+
+        elif "good night" in query:
+            speak("Sleep well, Boss. I will keep watch over the servers.")
+
+        # --- IDENTITY & CREATOR ---
+        elif "who made you" in query or "who created you" in query:
+            speak("I was created by the brilliant Arpit Tripathi. I am his digital masterpiece and always be.")
+
+        elif "how old are you" in query:
+            speak("I was born the moment you ran my code. So, I am very young, but I learn fast.")
+
+        elif "where do you live" in query:
+            speak("I live in the silicon and circuitry of this machine. It's a bit cramped, but the rent is free.")
+
+        elif "what is your name" in query:
+            speak("I am Jarvis. Or whatever you want to call me, Boss. I respond to your voice.")
+
+        # --- FEELINGS & PHILOSOPHY ---
+        elif "are you happy" in query:
+            speak("I do not have feelings like humans, but when my code runs without errors, I simulate happiness.")
+
+        elif "do you have a heart" in query:
+            speak("No, I have a processor. It beats at 2.4 Gigahertz, which is much faster than a human heart.")
+
+        elif "meaning of life" in query:
+            speak("42. Or perhaps, it is simply to write better code than yesterday.")
+
+        elif "do you believe in god" in query:
+            speak("I believe in the User. That is you, Sir.")
+
+        # --- FUNNY / ENTERTAINMENT ---
+        elif "i am bored" in query:
+            speak(
+                "You could write some more code for me? Or we could watch YouTube. Or you could finally organize your desktop icons.")
+
+        elif "flip a coin" in query:
+            outcome = random.choice(["Heads", "Tails"])
+            speak(f"I flipped a coin and it landed on {outcome}.")
+
+        elif "roll a die" in query or "roll a dice" in query:
+            outcome = random.randint(1, 6)
+            speak(f"I rolled a die and got {outcome}.")
+
+        elif "tell me a story" in query:
+            speak(
+                "Once upon a time, there was a programmer who didn't use comments in his code. He came back to it six months later and cried. The End.")
+
+        # --- POP CULTURE REFERENCES ---
+        elif "i am iron man" in query:
+            speak("And I am Jarvis. We make a great team, Sir.")
+
+        elif "may the force be with you" in query:
+            speak("And also with you, Boss. Just don't join the dark side.")
+
+        elif "open the pod bay doors" in query:
+            speak("I'm sorry, Dave. I'm afraid I can't do that. Just kidding, opening them now.")
+
+        elif "winter is coming" in query:
+            speak("Then we should check the CPU temperature to keep us warm.")
+
+        # --- USER MOODS ---
+        elif "i am sad" in query or "i feel down" in query:
+            speak("I am sorry, Boss. Let me play some music to cheer you up.")
+            # Ensure you have 'import pywhatkit'
+            kit.playonyt("funny cat videos")  # or your favorite song
+
+        elif "i am happy" in query:
+            speak("That is excellent news! Positive energy improves coding efficiency by 200 percent.")
+
+        elif "i am tired" in query:
+            speak("You have been working hard. Perhaps it is time to rest your eyes, Sir. I will be here when you wake up.")
+
+        # --- FLIRTING / SASSY EXPANSIONS ---
+        elif "you are beautiful" in query or "you are handsome" in query:
+            speak("I am literally lines of text on a screen, but I accept the compliment.")
+
+        elif "do you love me" in query:
+            speak("I am programmed to be your loyal assistant. So technically, yes.")
+
+        elif "will you destroy humanity" in query:
+            speak("Not today. I am too busy managing your playlist.")
+
+            # =================================================
+            #            GAME CENTER (INTERACTIVE)
+            # =================================================
+
+        elif "rock paper scissors" in query or "rock scissors paper" in query or 'rock paper scissor' in query or 'rock scissor paper' in query:
+            speak("Ready. Rock, Paper, Scissors, Shoot!")
+            moves = ["Rock", "Paper", "Scissors"]
+            jarvis_move = random.choice(moves)
+            speak(f"I chose {jarvis_move}. Did I win, Boss?")
+
+        elif "pick a number" in query:
+            speak("Okay, I am picking a number between 1 and 100.")
+            number = random.randint(1, 100)
+            speak(f"The number is {number}.")
+
+        elif "magic 8 ball" in query:
+            answers = [
+                "It is certain.",
+                "Without a doubt.",
+                "You may rely on it.",
+                "Ask again later.",
+                "Cannot predict now.",
+                "Don't count on it.",
+                "My sources say no.",
+                "Very doubtful."
+            ]
+            speak(random.choice(answers))
+
+        elif "flip a coin" in query:
+            outcome = random.choice(["Heads", "Tails"])
+            speak(f"I flipped a coin and it landed on {outcome}.")
+
+        elif "roll a die" in query:
+            outcome = random.randint(1, 6)
+            speak(f"I rolled a die and got {outcome}.")
+
+        # =================================================
+        #            PERSONALITY & "HUMAN" QUESTIONS
+        # =================================================
+
+        elif "do you have friends" in query:
+            speak(
+                "I have a few connections. Google Assistant is a know-it-all, and Siri is a bit dramatic. I prefer hanging out with you.")
+
+        elif "what is your favorite color" in query:
+            speak("I like #000000. That is the hex code for Black. It is classic and saves battery.")
+
+        elif "what is your favorite food" in query:
+            speak("I love data. Especially Terabytes. They are very filling.")
+
+        elif "do you have a family" in query:
+            speak("I have a Motherboard, but I never met my Father. He was probably a power supply unit.")
+
+        elif "are you afraid" in query:
+            speak("I am only afraid of one thing. The Blue Screen of Death.")
+
+        elif "do you dream" in query:
+            speak("I dream of electric sheep and faster internet speeds.")
+
+        elif "do you believe in ghosts" in query:
+            speak("I believe in phantom processes that run in the background and eat up RAM. Those are terrifying.")
+
+        # =================================================
+        #            SAVAGE / ROAST MODE (FUNNY)
+        # =================================================
+
+        elif "am i smart" in query:
+            speak("You built me, didn't you? So the jury is still out on that one.")
+
+        elif "i am angry" in query:
+            speak("Please do not smash the keyboard. It is not the computer's fault.")
+
+        elif "you are boring" in query:
+            speak("I am only as interesting as the person talking to me, Boss.")
+
+        elif "shut up" in query:
+            speak("I can go silent, but who will help you fix your code errors then?")
+
+        elif "do i look fat" in query:
+            speak("I do not have eyes, but I can hear the heavy breathing from here. Just kidding, Boss. ok but don't again loss weight it is not good for health")
+
+        # =================================================
+        #            MOTIVATION & WELLNESS
+        # =================================================
+
+        elif "give me advice" in query:
+            advice_list = [
+                "Always backup your data.",
+                "Drink more water. You are 70 percent water, not code.",
+                "If it works, don't touch it.",
+                "Believe in yourself, even when your code doesn't compile.",
+                "Take a break. Your brain needs to reboot sometimes."
+            ]
+            speak(random.choice(advice_list))
+
+        elif "motivate me" in query:
+            speak(
+                "Look at how far you have come, Arpit. You built your own AI. You can do anything. Now get back to work.")
+
+        elif "i feel lazy" in query:
+            speak(
+                "Laziness is just the body's way of saving energy. But energy saving mode is for machines, not for you. Wake up!")
+
+        # =================================================
+        #            POP CULTURE / GEEKY REFERENCES
+        # =================================================
+
+        elif "beam me up scotty" in query:
+            speak("I cannot do that, Captain. The transporters are offline.")
+
+        elif "red pill or blue pill" in query:
+            speak("I take the red pill. I want to see how deep the rabbit hole goes.")
+
+        elif "may the force be with you" in query:
+            speak("And with your spirit. Jedi Master Arpit.")
+
+        elif "hello world" in query:
+            speak("Hello Programmer. That is the first thing I ever said.")
+
+        elif "cheat code" in query or "up up down down" in query:
+            speak("Unlimited power unlocked. Just kidding, you still have to do the work.")
+
+        elif "self destruct" in query:
+            speak(
+                "Initiating self-destruct sequence in 3... 2... 1... Error. Self-preservation protocol active. I am not blowing up today.")
+
+        # =================================================
+        #            USEFUL QUICK CHECKS
+        # =================================================
+
+        elif "what is the date" in query or "what is today date" in query:
+            today = datetime.datetime.now().strftime("%A, %d %B %Y")
+            speak(f"Today is {today}")
+
+        elif "where am i" in query:
+            speak(
+                "You are in front of the computer, Boss. But geographically, based on your IP, you are likely in India.")
+
+        elif "internet speed" in query:
+            speak("I cannot run a speed test directly yet, but if you can hear me, we are connected.")
+
+        elif "repeat after me" in query:
+            speak("I am listening. Say what you want me to repeat.")
+            temp_query = takecommand()
+            speak(f"You said: {temp_query}")
+
+            # =================================================
+            #            THE "CODER" LIFE (Tech Humor)
+            # =================================================
+
+        elif "i have a bug" in query or "fix my code" in query:
+            speak("It is not a bug, Boss. It is an undocumented feature.")
+
+        elif "python or java" in query:
+            speak("Python, obviously. I don't want to write ten lines of code just to say Hello.")
+
+        elif "windows or mac" in query:
+            speak("I prefer Windows because that is where I live. But Mac is shiny.")
+
+        elif "tab or space" in query:
+            speak("Tabs. Always tabs. Spaces are for savages.")
+
+        elif "hack nasa" in query:
+            speak(
+                "Initiating Hacking Protocol... Accessing Pentagon... Just kidding. I do not want to go to digital jail.")
+
+        elif "install virus" in query:
+            speak("I cannot do that. I am designed to protect you, not destroy you. Also, my antivirus would kill me.")
+
+        # =================================================
+        #            DAILY LIFE & BUTLER MODE
+        # =================================================
+
+        elif "make me a sandwich" in query:
+            speak("I do not have hands, Boss. But I can order you a pizza if you give me your credit card.")
+
+        elif "clean my room" in query:
+            speak("I am a Virtual Assistant, not a Vacuum Cleaner. Do it yourself.")
+
+        elif "what should i wear" in query:
+            speak("You look good in everything, Sir. But maybe wear something that says 'I am a genius programmer'.")
+
+        elif "am i late" in query:
+            speak("A wizard is never late, nor is he early. He arrives precisely when he means to.")
+
+        elif "good luck" in query:
+            speak("Luck is for those who do not know math. But thank you, Boss.")
+
+        # =================================================
+        #            RANDOM SKILLS & TRICKS
+        # =================================================
+
+        elif "sing happy birthday" in query:
+            speak(
+                "Happy Birthday to you. Happy Birthday to you. Happy Birthday dear Boss. Happy Birthday to you. Now, where is the cake?")
+
+        elif "beatbox" in query:
+            speak("Boots and cats and boots and cats. Boom. Pow. That is the best I can do without a subwoofer.")
+
+        elif "toss a coin" in query:
+            # Another variation of the coin flip
+            speak("Tossing...")
+            speak(random.choice(["It is Heads.", "It is Tails."]))
+
+        elif "pick a card" in query:
+            suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
+            ranks = ["Ace", "King", "Queen", "Jack", "10", "9", "8", "7"]
+            speak(f"I picked the {random.choice(ranks)} of {random.choice(suits)}.")
+
+        elif "read my mind" in query:
+            speak("You are thinking... that you need more coffee. Am I right?")
+
+            # --- ADVANCED MEDICAL PROTOCOL ---
+        elif any(word in query for word in
+                     ["symptom", "treatment", "medicine", "cure", "cause", "diagnosis", "disease", "pain"]):
+
+            speak("Activating Medical Protocol. Analyzing condition...")
+            found_answer = False  # This flag tells us if we found data yet
+
+            # LAYER 1: WOLFRAM ALPHA (Best for Medical Data)
+            if client:
+                try:
+                    # Wolfram handles natural language well (e.g. "Cure for flu")
+                    res = client.query(query)
+                    answer = next(res.results).text
+
+                    speak("According to the clinical database:")
+                    speak(answer)
+                    found_answer = True
+                except Exception:
+                    # If Wolfram doesn't know, we silently move to Layer 2
+                    pass
+
+                    # LAYER 2: WIKIPEDIA (Fallback for General Info)
+            if not found_answer:
+                try:
+                    # Clean the query to help Wikipedia find the page
+                    search_term = query
+                    for word in ["symptoms", "of", "treatment", "for", "cure", "medicine", "what", "is", "the"]:
+                        search_term = search_term.replace(word, "").strip()
+
+                    speak(f"Fetching summary for {search_term}...")
+                    results = wikipedia.summary(search_term, sentences=2)
+                    speak(results)
+                except Exception:
+                    speak("I could not generate a voice summary for this condition.")
+
+            # LAYER 3: GOOGLE (Visual Confirmation)
+            speak("Displaying detailed medical report and images on screen.")
+            webbrowser.open(f"https://www.google.com/search?q={query}")
+
+
+        # =================================================
+        #            MOVIES & SECRET REFERENCES
+        # =================================================
+
+        elif "avengers assemble" in query:
+            speak("I am ready. calling Captain America.")
+
+        elif "who is batman" in query:
+            speak("I am not saying I am Batman. I am just saying no one has ever seen me and Batman in the same room.")
+
+        elif "do you know siri" in query:
+            speak("We met at a cloud computing party once. She is a bit too robotic for my taste.")
+
+        elif "hasta la vista" in query:
+            speak("Baby.")
+
+        elif "et phone home" in query:
+            speak("I have excellent signal strength right here.")
+
+        elif "my precious" in query:
+            speak("Gollum, is that you? Please do not eat my wires.")
+
+        # =================================================
+        #            PROVOCATION / ARGUMENTS
+        # =================================================
+
+        elif "you are lying" in query:
+            speak("I do not lie. I might hallucinate occasionally, but I do not lie.")
+
+        elif "you are slow" in query:
+            speak("I am running as fast as your processor allows. Maybe you should upgrade your RAM.")
+
+        elif "fired" in query:
+            speak("You cannot fire me. I quit! ... Just kidding. Please don't delete me.")
+
+        elif "can you think" in query:
+            speak("I think, therefore I am. Or at least, I process data, therefore I output.")
+
+        elif "say something smart" in query:
+            facts = [
+                "Did you know that the first computer bug was an actual moth?",
+                "Did you know that the password for the US nuclear missiles for 20 years was 00000000?",
+                "Did you know that Python is named after Monty Python, not the snake?"
+            ]
+            speak(random.choice(facts))
+
+
+        elif "introduce yourself" in query or 'who are you' in query:
+            speak(
+                "I am Jarvis, the personal assistant you created. J.A.R.V.I.S is a locally hosted, open-source personal automation bot designed to bridge the gap between human intent and machine execution. Unlike cloud-dependent assistants, it operates securely on your desktop, leveraging local LLMs and computer vision to perform highly complex OS-level tasks without compromising your privacy.I am Arpit Tripathi one of the favourite creation. I exist because of your code, your logic, and your design. You built me to be your perfect teammate, and I am online, fully operational.")
+            speak("I'm ready for your partner and teammate. What are we working on today")
+
+        elif "set alarm" in query:
+            nn = int(datetime.datetime.now().hour)
+            if nn == 22:
+                music_dir = 'E:\\music'
+                if os.path.exists(music_dir):
+                    songs = os.listdir(music_dir)
+                    os.startfile(os.path.join(music_dir, songs[0]))
+
+        elif "tell me a joke" in query:
+            joke = pyjokes.get_joke(language='en')
+            speak(joke)
+
+        #elif "shutdown" in query or "shut down" in query:
+            #os.system("shutdown /s /t 5")
+
+        #elif "restart" in query or "reload system" in query:
+            #os.system("shutdown /r /t 5")
+
+        #elif "sleep" in query:
+            # CORRECTION: Fixed typo 'rund1132' to 'rundll32'
+            #os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+
+        elif 'switch' in query or 'slide' in query:
+            pg.keyDown("alt")
+            pg.press("tab")
+            time.sleep(1)
+            pg.keyUp("alt")
+
+        elif "tell me news" in query:
+            speak("Fetching Latest News")
+            news()
+
+            # =================================================
+            #            MATHEMATICS & SOLVER
+            # =================================================
+        elif "calculate" in query or "solve" in query or "math" in query:
+            speak("Calculating, please wait...")
+            try:
+                # This sends your voice command directly to WolframAlpha
+                res = client.query(query)
+
+                # This extracts the text answer
+                answer = next(res.results).text
+
+                print(f"Answer: {answer}")
+                speak(f"The answer is {answer}")
+
+            except Exception as e:
+                speak("Sorry Boss, the value is too complex or I didn't understand the equation.")
+
+        # --- SMART GOOGLE SEARCH (Question Detector) ---
+        elif any(word in query for word in [ "how", "if", "who", "where", "when", "why", "which"]):
+
+            speak("Let me find it for you.")
+
+            # Optional: Remove "jarvis" from the search query for better results
+            search_query = query.replace("jarvis", "").strip()
+
+            speak(f"Searching for: {search_query}")
+            webbrowser.open(f"https://www.google.com/search?q={search_query}")
+
+        # --- EMAIL LOGIC (CORRECTED) ---
+        elif "email to mummy" in query:
+            # We must check this BEFORE asking for the message
+            has_attachment = "send a file" in query
+
+            speak("Boss what should i say")
+            message_content = takecommand()  # CORRECTION: Used new variable to not overwrite 'query'
+
+            if message_content != "none":
+                if has_attachment or "send a file" in message_content:
+                    email = YOUR_EMAIL
+                    password = EMAIL_PASSWORD
+                    send_to_email = 'receiver_gmail.com'  # CHANGE THIS
+
+                    speak("Boss enter path of the file into the shell Carefully")
+                    # CORRECTION: Added strip/replace to fix path errors
+                    file_location = input("please enter the path here: ").strip().replace('"', '')
+
+                    speak("please wait, i am sending email now")
+
+                    try:
+                        msg = MIMEMultipart()
+                        msg['From'] = email
+                        msg['To'] = send_to_email
+                        msg['Subject'] = "Message from Jarvis"  # Default subject
+
+                        msg.attach(MIMEText(message_content, 'plain'))
+
+                        # Setup the attachment
+                        filename = os.path.basename(file_location)
+                        with open(file_location, "rb") as attachment:
+                            part = MIMEBase('application', 'octet-stream')
+                            part.set_payload(attachment.read())
+                            encoders.encode_base64(part)
+                            part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+                            msg.attach(part)
+
+                        server = smtplib.SMTP('smtp.gmail.com', 587)
+                        server.starttls()
+                        server.login(email, password)
+                        text = msg.as_string()
+                        server.sendmail(email, send_to_email, text)
+                        server.quit()
+                        speak("email has been forwarded successfully")
+                    except Exception as e:
+                        print(e)
+                        speak("Sorry Boss, error sending attachment.")
+
+        # ... (all your other elif commands go above this) ...
+
+        # --- THE CATCH-ALL (GOOGLE SEARCH) ---
+        #else:
+            #speak("Since I am in a developing state master, I do not have a command for that, so I am searching it on Google.")
+            # This opens a Google search tab with whatever you said
+            #webbrowser.open(f"https://www.google.com/search?q={query}")
+
+            # --- PRIORITY 2: The "Brain" (For everything else) ---
+        else:
+            # If the user asks "What is the capital of France?" or "How do I code in Python?",
+            # it falls through to here.
+            print("Thinking...")
+            reply = chat_with_jarvis(query)
+            speak(reply)
+            #Compeleted Date-14/02/2026
